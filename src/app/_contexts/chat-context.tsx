@@ -95,8 +95,6 @@ export function ChatProvider({
 }: ChatProviderProps) {
   const utils = api.useUtils();
 
-  console.log(initialPreferences);
-
   const [selectedChatModel, setSelectedChatModelState] =
     useState<LanguageModel>(
       initialPreferences?.selectedChatModel ?? DEFAULT_CHAT_MODEL,
