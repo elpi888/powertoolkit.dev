@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 import { api } from "@/trpc/react";
-import { signIn } from "next-auth/react";
+// import { signIn } from "next-auth/react"; // Removed: Clerk handles connections differently
 
 interface ConnectProps {
   provider: string;
@@ -20,12 +20,15 @@ export const ConnectButton: React.FC<ConnectProps> = ({ provider }) => {
   return (
     <Button
       onClick={() => {
-        void signIn(provider, {
-          callbackUrl: "/account?tab=connected-accounts",
-        });
+        // TODO: Refactor for Clerk or remove.
+        // Clerk typically handles new connections via its UI (e.g., UserProfile component or sign-in flow).
+        // This button's original NextAuth signIn logic is no longer applicable.
+        toast.info(
+          "Managing connected accounts is now done through your Clerk user profile.",
+        );
       }}
     >
-      Connect
+      Connect {/* This button may need to be re-purposed or removed */}
     </Button>
   );
 };

@@ -5,16 +5,23 @@ import type { WebhookEvent, UserJSON } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { env } from "@/env";
 
-// Ensure CLERK_WEBHOOK_SECRET is set in environment variables
-const WEBHOOK_SECRET = env.CLERK_WEBHOOK_SECRET;
+// const WEBHOOK_SECRET = env.CLERK_WEBHOOK_SECRET; // Moved inside handler
 
-if (!WEBHOOK_SECRET) {
-  throw new Error(
-    "Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local",
-  );
-}
+// if (!WEBHOOK_SECRET) { // Moved inside handler
+//   throw new Error(
+//     "Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local",
+//   );
+// }
 
 async function handler(req: Request) {
+  const WEBHOOK_SECRET = env.CLERK_WEBHOOK_SECRET;
+  if (!WEBHOOK_SECRET) {
+    console.error("CLERK_WEBHOOK_SECRET is not configured for webhook handler.");
+    return new Response("Server configuration error: Webhook secret not set.", {
+      status: 500,
+    });
+  }
+
   const headerPayload = headers();
   const svix_id = headerPayload.get("svix-id");
   const svix_timestamp = headerPayload.get("svix-timestamp");
@@ -60,9 +67,14 @@ async function handler(req: Request) {
               ? `${eventData.first_name} ${eventData.last_name ?? ""}`.trim()
               : eventData.username, // Fallback to username if name parts are not available
             image: eventData.image_url,
-            emailVerified: eventData.email_addresses.find(
-              (email) => email.id === eventData.primary_email_address_id,
-            )?.verification?.status === "verified" ? new Date(eventData.updated_at * 1000 || Date.now()) : null,
+            emailVerified: (() => {
+              const primaryEmail = eventData.email_addresses.find(
+                (email) => email.id === eventData.primary_email_address_id,
+              );
+              return primaryEmail?.verification?.status === "verified"
+                ? new Date(eventData.updated_at * 1000) // updated_at is Unix timestamp in seconds
+                : null;
+            })(),
             // Note: external_id is not directly available on eventData.data for user.created
             // If mapping by external_id was critical at creation via webhook,
             // this would need a more complex flow or reliance on JWT customisation for subsequent linking.
@@ -83,9 +95,14 @@ async function handler(req: Request) {
               ? `${eventData.first_name} ${eventData.last_name ?? ""}`.trim()
               : eventData.username,
             image: eventData.image_url,
-            emailVerified: eventData.email_addresses.find(
-              (email) => email.id === eventData.primary_email_address_id,
-            )?.verification?.status === "verified" ? new Date(eventData.updated_at * 1000 || Date.now()) : null,
+            emailVerified: (() => {
+              const primaryEmail = eventData.email_addresses.find(
+                (email) => email.id === eventData.primary_email_address_id,
+              );
+              return primaryEmail?.verification?.status === "verified"
+                ? new Date(eventData.updated_at * 1000) // updated_at is Unix timestamp in seconds
+                : null;
+            })(),
           },
         });
         console.log(`User ${eventData.id} updated in local DB.`);
@@ -102,10 +119,10 @@ async function handler(req: Request) {
               where: { id: eventData.id },
             });
             console.log(`User ${eventData.id} deleted from local DB via webhook.`);
-          } catch (error: any) {
+          } catch (error: unknown) { // Changed from any to unknown
             // Log the error, especially if it's a PrismaClientKnownRequestError (e.g., P2025 Record to delete does not exist)
             // or a foreign key constraint error (P2003).
-            if (error.code === 'P2025') {
+            if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
               console.warn(`Webhook: Attempted to delete user ${eventData.id}, but user not found in local DB.`);
             } else {
               console.error(`Webhook: Error deleting user ${eventData.id}:`, error);
@@ -122,7 +139,7 @@ async function handler(req: Request) {
         console.log(`Unhandled webhook event type: ${eventType}`);
     }
     return NextResponse.json({ received: true }, { status: 200 });
-  } catch (error) {
+  } catch (error: unknown) { // Changed from any to unknown
     console.error("Error processing webhook event:", error);
     return NextResponse.json(
       { error: "Failed to process webhook event" },

@@ -11,8 +11,9 @@ import {
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { signIn } from "next-auth/react";
+// import { signIn } from "next-auth/react"; // Removed: Clerk handles connections
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner"; // For placeholder action
 import {
   Tooltip,
   TooltipContent,
@@ -86,23 +87,17 @@ export const googleCalendarClientToolkit = createClientToolkit(
             variant="outline"
             size="sm"
             onClick={() => {
-              void signIn(
-                "google",
-                {
-                  callbackUrl: `${window.location.href}?${Toolkits.GoogleCalendar}=true`,
-                },
-                {
-                  prompt: "consent",
-                  access_type: "offline",
-                  response_type: "code",
-                  include_granted_scopes: true,
-                  scope: `openid email profile ${calendarScope}`,
-                },
+              // TODO: Refactor for Clerk.
+              // This should ideally link to Clerk's User Profile page where connections can be managed,
+              // or use a Clerk-provided method to initiate the Google connection with correct scopes.
+              // The tRPC call api.accounts.getAccountByProvider is also now based on obsolete data.
+              toast.info(
+                "Connect Google Calendar via your user profile (functionality pending). Ensure calendar scopes are granted.",
               );
             }}
             className="bg-transparent"
           >
-            Connect
+            Connect {/* Button's purpose needs to be re-evaluated with Clerk */}
           </Button>
         );
       }
@@ -113,22 +108,16 @@ export const googleCalendarClientToolkit = createClientToolkit(
             variant="outline"
             size="sm"
             onClick={() => {
-              void signIn(
-                "google",
-                {
-                  callbackUrl: `${window.location.href}?${Toolkits.GoogleCalendar}=true`,
-                },
-                {
-                  prompt: "consent",
-                  access_type: "offline",
-                  response_type: "code",
-                  include_granted_scopes: true,
-                  scope: `${account?.scope} ${calendarScope}`,
-                },
+              // TODO: Refactor for Clerk.
+              // This should ideally link to Clerk's User Profile page where connections can be managed,
+              // or use a Clerk-provided method to re-authenticate/request additional scopes for Google.
+              // The logic for checking account?.scope is based on obsolete data.
+              toast.info(
+                "Grant Google Calendar access via your user profile (functionality pending).",
               );
             }}
           >
-            Grant Access
+            Grant Access {/* Button's purpose needs to be re-evaluated with Clerk */}
           </Button>
         );
       }

@@ -10,10 +10,11 @@ import {
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
-import { signIn } from "next-auth/react";
+// import { signIn } from "next-auth/react"; // Removed: Clerk handles connections
 import { Loader2 } from "lucide-react";
 import { ToolkitGroups } from "@/toolkits/types";
 import { Toolkits } from "../shared";
+import { toast } from "sonner"; // For placeholder action
 
 export const githubClientToolkit = createClientToolkit(
   baseGithubToolkitConfig,
@@ -45,13 +46,15 @@ export const githubClientToolkit = createClientToolkit(
             variant="outline"
             size="sm"
             onClick={() => {
-              void signIn("github", {
-                callbackUrl: `${window.location.href}?${Toolkits.Github}=true`,
-              });
+              // TODO: Refactor for Clerk.
+              // This should ideally link to Clerk's User Profile page where connections can be managed,
+              // or use a Clerk-provided method to initiate the GitHub connection.
+              // The tRPC call api.accounts.hasProviderAccount is also now based on obsolete data.
+              toast.info("Connect GitHub via your user profile (functionality pending).");
             }}
             className="bg-transparent"
           >
-            Connect
+            Connect {/* Button's purpose needs to be re-evaluated with Clerk */}
           </Button>
         );
       }
