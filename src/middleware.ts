@@ -18,7 +18,8 @@ const isTrpcProtectedRoute = createRouteMatcher([
 // Define tRPC routes that might need to be public (e.g. for initial data, auth checks)
 // This is an example; adjust based on your actual public tRPC procedures.
 const isTrpcPublicRoute = createRouteMatcher([
-  '/api/trpc/auth.somePublicProcedure', // Replace with actual public tRPC procedures if any
+  // No public tRPC routes defined yet. Add specific paths here if any tRPC procedures use `publicProcedure`.
+  // e.g., '/api/trpc/post.listPublicPosts', '/api/trpc/health.check'
 ]);
 
 

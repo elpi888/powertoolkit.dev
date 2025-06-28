@@ -157,17 +157,38 @@ export const protectedProcedure = t.procedure
       try {
         userInDb = await ctx.db.user.create({
           data: {
-            id: clerkUser.id, // Use clerkUser.id as it's the definitive ID from Clerk for the user record
+            id: ctx.auth.userId, // Use ctx.auth.userId (which is externalId or Clerk's ID via JWT template)
             email: clerkUser.primaryEmailAddress?.emailAddress,
             name: nameToStore,
             image: clerkUser.imageUrl,
             // emailVerified: clerkUser.primaryEmailAddress?.verification?.status === "verified" ? new Date() : null,
+            // Note: emailVerified status from Clerk is the source of truth.
+            // This local field might become stale if not updated via webhooks.
+            // For critical checks, use Clerk's user object or API.
           },
         });
-      } catch (error) {
-        // Handle potential errors, e.g., unique constraint violation if email sync is tricky
+      } catch (error: any) {
+        // Improved error handling as suggested by Coderabbit
         console.error("Failed to create user in local DB:", error);
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to provision user locally." });
+        // Check if it's a unique constraint violation (user might have been created by a concurrent request)
+        if (error.code === 'P2002' || (error.meta?.target as string[])?.includes('email')) { // P2002 is Prisma's unique constraint failed code
+          // Attempt to fetch the user again, as they might have been created by a concurrent request
+          userInDb = await ctx.db.user.findUnique({
+            where: { id: ctx.auth.userId },
+          });
+          if (!userInDb) {
+            // If still not found after a P2002, something else is wrong.
+             throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to provision user locally after unique constraint error." });
+          }
+          // If found, proceed with this userInDb
+        } else {
+          // For other errors, re-throw a generic error
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to provision user locally.",
+            cause: error
+          });
+        }
       }
     }
 
