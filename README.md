@@ -70,15 +70,11 @@ Toolkit.dev's toolkit architecture allows AI assistants to use powerful tools:
 
 Choose any LLM provider - the app automatically adapts to your configuration!
 
-### **Flexible Authentication**
+### **Flexible Authentication with Clerk**
 
-- **Discord** OAuth
-- **Google** OAuth
-- **GitHub** OAuth
-- **Twitter** OAuth
-- **Notion** OAuth
-
-Just configure one auth provider and you're ready to go!
+- Simplified authentication flows managed by Clerk.
+- Supports various OAuth providers (Google, GitHub, LinkedIn, etc.), magic links, and password-based accounts, configurable via the Clerk dashboard.
+- Secure user session management and profile handling.
 
 #### **Media & Content**
 
@@ -104,7 +100,7 @@ Just configure one auth provider and you're ready to go!
 Toolkit.dev leverages the full power of the T3 Stack:
 
 - **[Next.js](https://nextjs.org)** - React framework with App Router
-- **[NextAuth.js](https://next-auth.js.org)** - Authentication solution
+- **[Clerk](https://clerk.com)** - Authentication and User Management
 - **[Prisma](https://prisma.io)** - Database ORM and migrations
 - **[Tailwind CSS](https://tailwindcss.com)** - Utility-first CSS framework
 - **[tRPC](https://trpc.io)** - End-to-end type-safe APIs
@@ -144,66 +140,24 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-#### Required Configuration
+Open the `.env` file and fill in the required values. See `.env.example` for the full list and detailed comments.
 
-**Database:**
+**Key Environment Variables:**
 
-```env
-DATABASE_URL="postgresql://username:password@localhost:5432/Toolkit.dev"
-```
-
-**App Configuration:**
-
-```env
-APP_URL="http://localhost:3000"
-AUTH_SECRET="your-secret-key"  # Generate with: openssl rand -base64 32
-NODE_ENV="development"
-```
-
-#### Choose at least one Authentication Provider
-
-**Option 1: Discord**
-
-```env
-AUTH_DISCORD_ID="your-discord-client-id"
-AUTH_DISCORD_SECRET="your-discord-client-secret"
-```
-
-**Option 2: Google**
-
-```env
-AUTH_GOOGLE_ID="your-google-client-id"
-AUTH_GOOGLE_SECRET="your-google-client-secret"
-```
-
-**Option 3: GitHub**
-
-```env
-AUTH_GITHUB_ID="your-github-client-id"
-AUTH_GITHUB_SECRET="your-github-client-secret"
-```
-
-**Option 4: Twitter**
-
-```env
-AUTH_TWITTER_ID="your-twitter-client-id"
-AUTH_TWITTER_SECRET="your-twitter-client-secret"
-```
-
-**Option 5: Notion**
-
-```env
-AUTH_NOTION_ID="your-notion-client-id"
-AUTH_NOTION_SECRET="your-notion-client-secret"
-```
-
-#### Add an OpenRouter key
-
-```env
-OPENROUTER_API_KEY=""
-```
-
-#### Optional Toolkit API Keys
+*   **Clerk Authentication:**
+    *   `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Your Clerk Publishable Key.
+    *   `CLERK_SECRET_KEY`: Your Clerk Secret Key.
+    *   `CLERK_WEBHOOK_SECRET`: Your Clerk Webhook Signing Secret (for user data sync).
+*   **Database:**
+    *   `DATABASE_URL`: Your PostgreSQL connection string.
+        *   For local development: e.g., `postgresql://postgres:password@localhost:5432/open-chat`
+        *   For Vercel deployment with Supabase: Use the **Session Pooler** string, e.g., `postgresql://postgres.YOUR_PROJECT_ID:YOUR_PASSWORD@aws-0-YOUR_REGION.pooler.supabase.com:5432/postgres` (See Supabase docs and `.env.example` for details on why Session Pooler is used for Vercel).
+*   **Application:**
+    *   `APP_URL`: The public URL of your application (e.g., `http://localhost:3000` for local, your Vercel URL for production).
+    *   `NODE_ENV`: Typically `development` or `production`.
+*   **AI Model Providers:**
+    *   `OPENROUTER_API_KEY`: Required if using OpenRouter.
+*   **Optional Toolkit API Keys & Services:**
 
 Enable specific toolkits by adding their API keys:
 
@@ -226,10 +180,15 @@ XAI_API_KEY=""
 
 ### 4. Database Setup
 
-Run database migrations:
+Ensure your PostgreSQL database server is running and accessible via the `DATABASE_URL` you configured. Then, apply database migrations:
 
 ```bash
-pnpm db:push
+pnpm prisma migrate deploy
+```
+
+Optionally, if seed data is defined in `prisma/seed.ts`:
+```bash
+pnpm db:seed
 ```
 
 ### 5. Start Development Server
