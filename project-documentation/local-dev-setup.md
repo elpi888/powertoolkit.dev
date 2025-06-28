@@ -93,9 +93,16 @@ This guide provides step-by-step instructions to set up the Open Chat applicatio
 
 ## Troubleshooting Tips
 
-*   **Environment Variables:** Double-check that all required variables in your `.env` file are correctly set. Refer to `src/env.js` for runtime validation of these variables.
-*   **Clerk Configuration:** Ensure your Clerk application settings in the Clerk Dashboard are correct (e.g., redirect URLs for OAuth providers if you configure them in Clerk, enabled authentication methods).
-*   **Database Connectivity:** Verify your `DATABASE_URL` is accurate and that your PostgreSQL server is running and accessible.
-*   **Prisma Client Issues:** If you encounter errors related to Prisma Client (e.g., "PrismaClientInitializationError"), ensure `pnpm prisma generate` has been run successfully after any schema modifications or dependency updates.
-*   **Port Conflicts:** If `http://localhost:3000` is in use, the `pnpm dev` command might fail or use an alternative port. Check the terminal output.
+*   **Environment Variables**: Double-check that all required variables in your `.env` file are correctly set. Refer to `src/env.js` for runtime validation of these variables.
+*   **Clerk Configuration**: Ensure your Clerk application settings in the Clerk Dashboard are correct (e.g., redirect URLs for OAuth providers if you configure them in Clerk, enabled authentication methods).
+*   **Database Connectivity**: Verify your `DATABASE_URL` is accurate and that your PostgreSQL server is running and accessible.
+*   **Prisma Client Issues**: If you encounter errors related to Prisma Client (e.g., "PrismaClientInitializationError"), ensure `pnpm prisma generate` has been run successfully after any schema modifications or dependency updates.
+*   **Port Conflicts**: If `http://localhost:3000` is in use, the `pnpm dev` command might fail or use an alternative port. Check the terminal output.
+```bash
+# Add language specification for the final code block (though this block isn't code, the original report might have meant a generic code block earlier)
+# For consistency, if there were other code blocks needing language specifiers, they should also be updated.
+# The Coderabbit example showed changing "- ```" to "+ ```bash". The final ``` in this file is not a code execution block.
+# I will assume the intent was for actual script blocks. The script blocks above (like `git clone`) already use ```bash.
+# If the report meant this very last "```", it's likely a misinterpretation by the bot for a non-code block.
+# I will ensure all actual code example blocks use ```bash.
 ```

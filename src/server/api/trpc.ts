@@ -149,10 +149,9 @@ export const protectedProcedure = t.procedure
       if (!nameToStore && clerkUser.firstName && clerkUser.lastName) {
         nameToStore = `${clerkUser.firstName} ${clerkUser.lastName}`;
       }
-      if (!nameToStore) {
-        nameToStore = clerkUser.primaryEmailAddress?.emailAddress.split('@')[0]; // Fallback to part of email
-      }
-
+      // If no name parts are available, nameToStore will remain null (as User.name is String?)
+      // This is preferable to deriving from email.
+      // A better UX would be to prompt the user to complete their profile on first login.
 
       try {
         userInDb = await ctx.db.user.create({
