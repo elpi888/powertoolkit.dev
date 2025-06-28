@@ -33,9 +33,10 @@ This guide provides step-by-step instructions to set up the Open Chat applicatio
     *   Open the `.env` file in a text editor. You will need to fill in the required values. Refer to the updated `.env.example` for a full list of necessary keys. At a minimum, you'll need:
         *   `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: From your Clerk Dashboard (API Keys section).
         *   `CLERK_SECRET_KEY`: From your Clerk Dashboard (API Keys section).
+        *   `CLERK_WEBHOOK_SECRET`: From your Clerk Dashboard after setting up a webhook endpoint (e.g., for `api/webhooks/clerk`). Essential for user data synchronization.
         *   `DATABASE_URL`: Your PostgreSQL connection string.
-            *   If using a local PostgreSQL instance, it might look like: `postgresql://user:password@localhost:5432/open-chat`
-            *   If using Supabase, use the **Direct connection** string: `postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres`
+            *   **For local development with a local PostgreSQL instance:** `postgresql://USER:PASSWORD@HOST:PORT/DATABASE_NAME` (e.g., `postgresql://postgres:password@localhost:5432/open-chat`)
+            *   **For Vercel deployment with Supabase (Recommended):** Use the **Session Pooler** connection string from your Supabase project settings (Database -> Connection Pooler). It will look like `postgresql://postgres.[PROJECT-ID]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres`. This is due to Vercel's IPv4 build environment. The direct connection string might not work reliably with Vercel without purchasing an IPv4 add-on for Supabase.
         *   `OPENROUTER_API_KEY`: Your OpenRouter API key (if using OpenRouter models).
         *   *(Optional)* API keys for `EXA_API_KEY`, `E2B_API_KEY`, `MEM0_API_KEY` if you intend to use those specific toolkits.
         *   *(Optional)* `REDIS_URL` and `BLOB_READ_WRITE_TOKEN` if using resumable streams and Vercel Blob storage for attachments.
