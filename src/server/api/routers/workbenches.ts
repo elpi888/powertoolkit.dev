@@ -10,7 +10,7 @@ export const workbenchesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
       const { limit, cursor } = input;
 
       const items = await ctx.db.workbench.findMany({
@@ -45,7 +45,7 @@ export const workbenchesRouter = createTRPCRouter({
   getWorkbench: protectedProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       return ctx.db.workbench.findUnique({
         where: {
@@ -77,7 +77,7 @@ export const workbenchesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       return ctx.db.workbench.create({
         data: {
@@ -99,7 +99,7 @@ export const workbenchesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       return ctx.db.workbench.update({
         where: {
@@ -117,7 +117,7 @@ export const workbenchesRouter = createTRPCRouter({
   deleteWorkbench: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       return ctx.db.workbench.delete({
         where: {
@@ -136,7 +136,7 @@ export const workbenchesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       // Verify workbench ownership
       const workbench = await ctx.db.workbench.findUnique({
@@ -169,7 +169,7 @@ export const workbenchesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
       const { workbenchId, limit, cursor } = input;
 
       // Verify workbench ownership
@@ -210,7 +210,7 @@ export const workbenchesRouter = createTRPCRouter({
   duplicateWorkbench: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       const originalWorkbench = await ctx.db.workbench.findUnique({
         where: {

@@ -43,13 +43,13 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
+    id            String    @id // ID will come from Clerk (either Clerk's own ID or externalId)
     name          String?
     email         String?   @unique
-    emailVerified DateTime?
+    emailVerified DateTime? // Clerk manages email verification status. Sync if needed.
     image         String?
-    accounts      Account[]
-    sessions      Session[]
+    // accounts      Account[] // Relation to NextAuth Account model (obsolete)
+    // sessions      Session[] // Relation to NextAuth Session model (obsolete)
     chats         Chat[]
     files         File[]
     images        Image[]

@@ -1,17 +1,11 @@
 import { Logo } from "@/components/ui/logo";
 
-import { AccountButton } from "./account-button";
+import { AccountButton } from "./account-button"; // This is now a client component
 import { ColorModeToggle } from "./color-mode-toggle";
 import { HStack } from "@/components/ui/stack";
-import { auth } from "@/server/auth";
 
-export const Navbar = async () => {
-  const session = await auth();
-
-  if (!session) {
-    return null;
-  }
-
+// No longer needs to be async, AccountButton handles its own auth state
+export const Navbar = () => {
   return (
     <HStack className="bg-background sticky top-0 z-10 justify-between p-2 md:hidden">
       <HStack>
@@ -21,7 +15,7 @@ export const Navbar = async () => {
         </h1>
       </HStack>
       <HStack>
-        <AccountButton />
+        <AccountButton /> {/* Clerk's <SignedIn>/<SignedOut> inside will manage visibility */}
         <ColorModeToggle />
       </HStack>
     </HStack>

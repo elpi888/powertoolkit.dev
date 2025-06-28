@@ -67,7 +67,7 @@ export const messagesRouter = createTRPCRouter({
   getMessageCountByUserId: protectedProcedure.query(async ({ ctx }) => {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    const userId = ctx.session.user.id;
+    const userId = ctx.auth.userId; // Updated
 
     return ctx.db.message.count({
       where: {
@@ -118,8 +118,26 @@ export const messagesRouter = createTRPCRouter({
     }),
 
   deleteMessage: protectedProcedure
-    .input(z.string())
+    .input(z.string()) // input is messageId
     .mutation(async ({ ctx, input }) => {
+      const message = await ctx.db.message.findUnique({
+        where: { id: input },
+        select: { chatId: true },
+      });
+
+      if (!message) {
+        throw new Error("Message not found.");
+      }
+
+      const chat = await ctx.db.chat.findUnique({
+        where: { id: message.chatId },
+        select: { userId: true },
+      });
+
+      if (!chat || chat.userId !== ctx.auth.userId) {
+        throw new Error("Access denied. You can only delete messages from your own chats.");
+      }
+
       return ctx.db.message.delete({
         where: { id: input },
       });
@@ -133,6 +151,15 @@ export const messagesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const chat = await ctx.db.chat.findUnique({
+        where: { id: input.chatId },
+        select: { userId: true },
+      });
+
+      if (!chat || chat.userId !== ctx.auth.userId) {
+        throw new Error("Access denied. You can only delete messages from your own chats.");
+      }
+
       return ctx.db.message.deleteMany({
         where: { chatId: input.chatId, createdAt: { lt: input.timestamp } },
       });

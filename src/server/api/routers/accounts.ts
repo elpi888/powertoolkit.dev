@@ -14,7 +14,7 @@ export const accountsRouter = createTRPCRouter({
 
       const items = await ctx.db.account.findMany({
         where: {
-          userId: ctx.session.user.id,
+          userId: ctx.auth.userId, // Updated from ctx.session.user.id
         },
         take: limit + 1,
         cursor: cursor ? { id: cursor } : undefined,
@@ -37,7 +37,7 @@ export const accountsRouter = createTRPCRouter({
       return ctx.db.account.findFirst({
         where: {
           id: input,
-          userId: ctx.session.user.id,
+          userId: ctx.auth.userId, // Updated from ctx.session.user.id
         },
       });
     }),
@@ -47,7 +47,7 @@ export const accountsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return ctx.db.account.findFirst({
         where: {
-          userId: ctx.session.user.id,
+          userId: ctx.auth.userId, // Updated from ctx.session.user.id
           provider: input,
         },
       });
@@ -57,7 +57,7 @@ export const accountsRouter = createTRPCRouter({
     .input(z.string())
     .query(async ({ ctx, input }) => {
       const account = await ctx.db.account.findFirst({
-        where: { userId: ctx.session.user.id, provider: input },
+        where: { userId: ctx.auth.userId, provider: input }, // Updated from ctx.session.user.id
       });
 
       return !!account;
@@ -69,7 +69,19 @@ export const accountsRouter = createTRPCRouter({
       return ctx.db.account.delete({
         where: {
           id: input,
-          userId: ctx.session.user.id,
+          // userId: ctx.session.user.id, // This was incorrect, a user should only be able to delete their own account record
+          // The check should be: find the account by id, then check if its userId matches ctx.auth.userId
+          // However, Prisma's delete often requires a unique identifying field or combination.
+          // A safer pattern is to ensure the userId matches in the where clause if possible,
+          // or do a check before deleting if the where clause can't combine id and userId directly for delete.
+          // For now, let's assume the ID is globally unique and the intent was to scope by user.
+          // Prisma's delete typically works on a unique field. If 'id' is unique, this is fine.
+          // The original code might have had a bug if 'id' wasn't globally unique for accounts.
+          // Given it's `userId: ctx.session.user.id` in the where clause, it means it was trying to ensure
+          // that the account being deleted belongs to the user.
+          // Let's replicate that with `userId: ctx.auth.userId`.
+          userId: ctx.auth.userId, // Ensures the user is deleting their own account link
+          id: input, // The ID of the account link to delete
         },
       });
     }),

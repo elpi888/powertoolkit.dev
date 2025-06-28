@@ -12,7 +12,7 @@ export const chatsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
       const { limit, cursor, workbenchId } = input;
 
       const items = await ctx.db.chat.findMany({
@@ -44,7 +44,8 @@ export const chatsRouter = createTRPCRouter({
       return ctx.db.chat.findUnique({
         where: {
           id: input,
-          OR: [{ userId: ctx.session.user.id }, { visibility: "public" }],
+          // Ensure user owns the chat or it's public
+          OR: [{ userId: ctx.auth.userId }, { visibility: "public" }], // Updated
         },
         include: {
           workbench: true,
@@ -55,16 +56,22 @@ export const chatsRouter = createTRPCRouter({
   createChat: protectedProcedure
     .input(
       z.object({
-        id: z.string(),
+        id: z.string(), // ID is passed from client? Usually DB generates it. Assuming client generates UUID.
         title: z.string(),
         visibility: z.enum(["public", "private"]),
-        userId: z.string(),
+        // userId: z.string(), // userId should come from context
         workbenchId: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       return ctx.db.chat.create({
-        data: input,
+        data: {
+          id: input.id,
+          title: input.title,
+          visibility: input.visibility,
+          userId: ctx.auth.userId, // Use authenticated user's ID
+          workbenchId: input.workbenchId,
+        },
       });
     }),
 
@@ -79,7 +86,7 @@ export const chatsRouter = createTRPCRouter({
       return ctx.db.chat.update({
         where: {
           id: input.id,
-          userId: ctx.session.user.id,
+          userId: ctx.auth.userId, // Updated
         },
         data: { visibility: input.visibility },
       });
@@ -96,7 +103,7 @@ export const chatsRouter = createTRPCRouter({
       return ctx.db.chat.update({
         where: {
           id: input.id,
-          userId: ctx.session.user.id,
+          userId: ctx.auth.userId, // Updated
         },
         data: { title: input.title },
       });
@@ -105,8 +112,22 @@ export const chatsRouter = createTRPCRouter({
   deleteChat: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.chat.delete({
+      // First, verify the chat belongs to the user or if other conditions allow deletion
+      const chatToDelete = await ctx.db.chat.findUnique({
         where: { id: input },
+      });
+
+      if (!chatToDelete) {
+        throw new Error("Chat not found.");
+      }
+
+      if (chatToDelete.userId !== ctx.auth.userId) {
+        // Optionally, allow admins to delete, or based on other roles/permissions
+        throw new Error("Access denied. You can only delete your own chats.");
+      }
+
+      return ctx.db.chat.delete({
+        where: { id: input /* userId: ctx.auth.userId */ }, // userId check is done above
       });
     }),
 
@@ -119,11 +140,11 @@ export const chatsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { originalChatId, messageId } = input;
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       // Get the original chat to verify ownership
       const originalChat = await ctx.db.chat.findUnique({
-        where: { id: originalChatId, userId },
+        where: { id: originalChatId, userId: userId }, // Ensured userId for ownership check
       });
 
       if (!originalChat) {

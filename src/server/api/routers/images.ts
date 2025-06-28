@@ -11,7 +11,7 @@ export const imagesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       const items = await ctx.db.image.findMany({
         where: {
@@ -40,7 +40,7 @@ export const imagesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       return ctx.db.image.findFirst({
         where: {
@@ -68,7 +68,7 @@ export const imagesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       return ctx.db.image.create({
         data: {
@@ -82,7 +82,7 @@ export const imagesRouter = createTRPCRouter({
   deleteImage: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       return ctx.db.image.delete({
         where: {
@@ -93,7 +93,7 @@ export const imagesRouter = createTRPCRouter({
     }),
 
   deleteAllUserImages: protectedProcedure.mutation(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
+    const userId = ctx.auth.userId; // Updated
 
     return ctx.db.image.deleteMany({
       where: {
