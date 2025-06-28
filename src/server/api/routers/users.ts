@@ -12,10 +12,10 @@ export const usersRouter = createTRPCRouter({
         name: ctx.dbUser.name,
         email: ctx.dbUser.email,
         image: ctx.dbUser.image,
-        emailVerified: ctx.dbUser.emailVerified, // This field's sync from Clerk needs consideration
+        emailVerified: ctx.dbUser.emailVerified, // Represents last synced status from Clerk via webhooks.
       };
     }
-    // Fallback if dbUser somehow isn't there, though protectedProcedure should ensure it.
+    // Fallback if dbUser somehow isn't available from context (should be rare).
     return ctx.db.user.findUnique({
       where: {
         id: ctx.auth.userId, // Updated

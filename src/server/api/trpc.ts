@@ -160,10 +160,11 @@ export const protectedProcedure = t.procedure
             email: clerkUser.primaryEmailAddress?.emailAddress,
             name: nameToStore,
             image: clerkUser.imageUrl,
-            // emailVerified: clerkUser.primaryEmailAddress?.verification?.status === "verified" ? new Date() : null,
-            // Note: emailVerified status from Clerk is the source of truth.
-            // This local field might become stale if not updated via webhooks.
-            // For critical checks, use Clerk's user object or API.
+            emailVerified: clerkUser.primaryEmailAddress?.verification?.status === "verified"
+              ? new Date()
+              : null,
+            // Note: This sets emailVerified based on Clerk's status at creation time.
+            // Webhooks (user.updated) should keep this in sync if status changes later.
           },
         });
       } catch (error: any) {
