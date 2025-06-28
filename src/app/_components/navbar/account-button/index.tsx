@@ -1,22 +1,23 @@
-import { Unauthenticated } from "./unauthenticated";
-import { Authenticated } from "./authenticated";
+"use client";
 
-import { auth } from "@/server/auth";
-import { providers } from "@/server/auth/providers";
+import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import { User } from "lucide-react";
 
-export const AccountButton = async () => {
-  const session = await auth();
-
-  if (!session) {
-    return (
-      <Unauthenticated
-        providers={providers.map((provider) => ({
-          name: provider.name,
-          id: provider.id,
-        }))}
-      />
-    );
-  }
-
-  return <Authenticated session={session} />;
+export const AccountButton = () => {
+  return (
+    <>
+      <SignedIn>
+        <UserButton afterSignOutUrl="/" />
+      </SignedIn>
+      <SignedOut>
+        <SignInButton mode="modal">
+          <Button variant="outline">
+            <User className="mr-2 h-4 w-4" />
+            Sign In
+          </Button>
+        </SignInButton>
+      </SignedOut>
+    </>
+  );
 };

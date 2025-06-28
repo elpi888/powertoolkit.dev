@@ -12,7 +12,7 @@ export const filesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       const items = await ctx.db.file.findMany({
         where: {
@@ -41,7 +41,7 @@ export const filesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       return ctx.db.file.findFirst({
         where: {
@@ -70,7 +70,7 @@ export const filesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       return ctx.db.file.create({
         data: {
@@ -90,7 +90,7 @@ export const filesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       return ctx.db.file.update({
         where: {
@@ -106,7 +106,7 @@ export const filesRouter = createTRPCRouter({
   deleteFile: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       return ctx.db.file.delete({
         where: {
@@ -117,7 +117,7 @@ export const filesRouter = createTRPCRouter({
     }),
 
   deleteAllUserFiles: protectedProcedure.mutation(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
+    const userId = ctx.auth.userId; // Updated
 
     return ctx.db.file.deleteMany({
       where: {

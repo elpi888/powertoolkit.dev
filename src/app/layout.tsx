@@ -1,6 +1,7 @@
 import { Space_Grotesk } from "next/font/google";
 import { JetBrains_Mono } from "next/font/google";
 import { cookies } from "next/headers";
+import { ClerkProvider } from "@clerk/nextjs";
 
 import { TRPCReactProvider } from "@/trpc/react";
 
@@ -44,17 +45,19 @@ export default async function RootLayout({
       className={`${spaceGrotesk.variable} ${jetBrainsMono.variable} ${initialTheme === "dark" ? "dark" : ""}`}
     >
       <body>
-        <TRPCReactProvider>
-          <ThemeProvider initialTheme={initialTheme}>
-            <SidebarProvider>
-              <AppSidebar />
-              <SidebarInset className="flex h-dvh flex-col">
-                <Navbar />
-                {children}
-              </SidebarInset>
-            </SidebarProvider>
-          </ThemeProvider>
-        </TRPCReactProvider>
+        <ClerkProvider>
+          <TRPCReactProvider>
+            <ThemeProvider initialTheme={initialTheme}>
+              <SidebarProvider>
+                <AppSidebar />
+                <SidebarInset className="flex h-dvh flex-col">
+                  <Navbar />
+                  {children}
+                </SidebarInset>
+              </SidebarProvider>
+            </ThemeProvider>
+          </TRPCReactProvider>
+        </ClerkProvider>
         <Toaster />
       </body>
     </html>

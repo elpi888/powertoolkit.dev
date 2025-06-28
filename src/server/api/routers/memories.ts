@@ -29,7 +29,7 @@ export const memoriesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.auth.userId; // Updated
 
       if (!env.MEM0_API_KEY) {
         throw new Error("MEM0_API_KEY is not set");
@@ -80,7 +80,7 @@ export const memoriesRouter = createTRPCRouter({
     }),
 
   getMemoryCount: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
+    const userId = ctx.auth.userId; // Updated
 
     if (!env.MEM0_API_KEY) {
       throw new Error("MEM0_API_KEY is not set");
@@ -125,7 +125,7 @@ export const memoriesRouter = createTRPCRouter({
     }),
 
   deleteAllUserMemories: protectedProcedure.mutation(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
+    const userId = ctx.auth.userId; // Updated
 
     if (!env.MEM0_API_KEY) {
       throw new Error("MEM0_API_KEY is not set");

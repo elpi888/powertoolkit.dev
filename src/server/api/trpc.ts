@@ -10,8 +10,8 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { auth, currentUser } from "@clerk/nextjs/server"; // Import Clerk's auth
 
-import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 
 /**
@@ -27,11 +27,13 @@ import { db } from "@/server/db";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const session = await auth();
+  const authResult = await auth(); // Clerk's auth result
+  // const user = await currentUser(); // Optionally get full user details if needed in context for all procedures
 
   return {
     db,
-    session,
+    auth: authResult, // Pass Clerk's auth object to the context
+    // clerkUser: user,
     ...opts,
   };
 };
@@ -120,14 +122,82 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  */
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
-  .use(({ ctx, next }) => {
-    if (!ctx.session?.user) {
-      throw new TRPCError({ code: "UNAUTHORIZED" });
+  .use(async ({ ctx, next }) => {
+    if (!ctx.auth?.userId) {
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "Not authenticated" });
     }
+
+    // User provisioning logic
+    // ctx.auth.userId is the ID from Clerk (potentially externalId if JWT template is set)
+    let userInDb = await ctx.db.user.findUnique({
+      where: { id: ctx.auth.userId },
+    });
+
+    if (!userInDb) {
+      // User does not exist in local DB, create them
+      // Fetch full user details from Clerk to populate local DB
+      const clerkUser = await currentUser(); // Fetches the full user object from Clerk
+
+      if (!clerkUser) {
+        // This should ideally not happen if ctx.auth.userId is present,
+        // but as a safeguard or if clerkUser details are essential.
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not fetch user details from Clerk." });
+      }
+
+      // Determine name: use full name, or first + last, or email if name parts are empty
+      let nameToStore = clerkUser.fullName;
+      if (!nameToStore && clerkUser.firstName && clerkUser.lastName) {
+        nameToStore = `${clerkUser.firstName} ${clerkUser.lastName}`;
+      }
+      // If no name parts are available, nameToStore will remain null (as User.name is String?)
+      // This is preferable to deriving from email.
+      // A better UX would be to prompt the user to complete their profile on first login.
+
+      try {
+        userInDb = await ctx.db.user.create({
+          data: {
+            id: ctx.auth.userId, // Use ctx.auth.userId (which is externalId or Clerk's ID via JWT template)
+            email: clerkUser.primaryEmailAddress?.emailAddress,
+            name: nameToStore,
+            image: clerkUser.imageUrl,
+            emailVerified: clerkUser.primaryEmailAddress?.verification?.status === "verified"
+              ? new Date()
+              : null,
+            // Note: This sets emailVerified based on Clerk's status at creation time.
+            // Webhooks (user.updated) should keep this in sync if status changes later.
+          },
+        });
+      } catch (error: any) {
+        // Improved error handling as suggested by Coderabbit
+        console.error("Failed to create user in local DB:", error);
+        // Check if it's a unique constraint violation (user might have been created by a concurrent request)
+        if (error.code === 'P2002' || (error.meta?.target as string[])?.includes('email')) { // P2002 is Prisma's unique constraint failed code
+          // Attempt to fetch the user again, as they might have been created by a concurrent request
+          userInDb = await ctx.db.user.findUnique({
+            where: { id: ctx.auth.userId },
+          });
+          if (!userInDb) {
+            // If still not found after a P2002, something else is wrong.
+             throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to provision user locally after unique constraint error." });
+          }
+          // If found, proceed with this userInDb
+        } else {
+          // For other errors, re-throw a generic error
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to provision user locally.",
+            cause: error
+          });
+        }
+      }
+    }
+
+    // Attach the Clerk auth object and potentially the local DB user to the context for procedures
     return next({
       ctx: {
-        // infers the `session` as non-nullable
-        session: { ...ctx.session, user: ctx.session.user },
+        ...ctx,
+        auth: ctx.auth, // Clerk auth object (includes userId, sessionId, orgId, etc.)
+        dbUser: userInDb, // The user record from your local Prisma database
       },
     });
   });

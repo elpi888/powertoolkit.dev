@@ -6,7 +6,7 @@ import { z } from "zod";
 const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   const adminFeature = await ctx.db.userFeature.findFirst({
     where: {
-      userId: ctx.session.user.id,
+      userId: ctx.auth.userId, // Updated
       feature: {
         name: "admin",
       },
@@ -115,13 +115,13 @@ export const featuresRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const targetUserId = input.userId ?? ctx.session.user.id;
+      const targetUserId = input.userId ?? ctx.auth.userId; // Updated
 
       // Only allow users to see their own features unless they're admin
-      if (targetUserId !== ctx.session.user.id) {
+      if (targetUserId !== ctx.auth.userId) { // Updated
         const adminFeature = await ctx.db.userFeature.findFirst({
           where: {
-            userId: ctx.session.user.id,
+            userId: ctx.auth.userId, // Updated
             feature: {
               name: "admin",
             },
@@ -156,7 +156,7 @@ export const featuresRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return !!(await ctx.db.userFeature.findFirst({
         where: {
-          userId: ctx.session.user.id,
+          userId: ctx.auth.userId, // Updated
           feature: { name: input.feature },
         },
       }));
@@ -238,7 +238,7 @@ export const featuresRouter = createTRPCRouter({
   isAdmin: protectedProcedure.query(async ({ ctx }) => {
     const adminFeature = await ctx.db.userFeature.findFirst({
       where: {
-        userId: ctx.session.user.id,
+        userId: ctx.auth.userId, // Updated
         feature: {
           name: "admin",
         },

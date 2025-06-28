@@ -1,76 +1,7 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
-const createAuthSchema = () => {
-  const authSchema = {};
-
-  if (process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET) {
-    authSchema.AUTH_DISCORD_ID = z.string();
-    authSchema.AUTH_DISCORD_SECRET = z.string();
-  }
-
-  if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
-    authSchema.AUTH_GOOGLE_ID = z.string();
-    authSchema.AUTH_GOOGLE_SECRET = z.string();
-  }
-
-  if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
-    authSchema.AUTH_GITHUB_ID = z.string();
-    authSchema.AUTH_GITHUB_SECRET = z.string();
-  }
-
-  if (process.env.AUTH_TWITTER_ID && process.env.AUTH_TWITTER_SECRET) {
-    authSchema.AUTH_TWITTER_ID = z.string();
-    authSchema.AUTH_TWITTER_SECRET = z.string();
-  }
-
-  if (process.env.AUTH_NOTION_ID && process.env.AUTH_NOTION_SECRET) {
-    authSchema.AUTH_NOTION_ID = z.string();
-    authSchema.AUTH_NOTION_SECRET = z.string();
-  }
-
-  if (Object.keys(authSchema).length === 0) {
-    throw new Error("No authentication provider configured");
-  }
-
-  return authSchema;
-};
-
-const authRuntimeEnv = () => {
-  const object = {};
-
-  if (process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET) {
-    object.AUTH_DISCORD_ID = process.env.AUTH_DISCORD_ID;
-    object.AUTH_DISCORD_SECRET = process.env.AUTH_DISCORD_SECRET;
-  }
-
-  if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
-    object.AUTH_GOOGLE_ID = process.env.AUTH_GOOGLE_ID;
-    object.AUTH_GOOGLE_SECRET = process.env.AUTH_GOOGLE_SECRET;
-  }
-
-  if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
-    object.AUTH_GITHUB_ID = process.env.AUTH_GITHUB_ID;
-    object.AUTH_GITHUB_SECRET = process.env.AUTH_GITHUB_SECRET;
-  }
-
-  if (process.env.AUTH_TWITTER_ID && process.env.AUTH_TWITTER_SECRET) {
-    object.AUTH_TWITTER_ID = process.env.AUTH_TWITTER_ID;
-    object.AUTH_TWITTER_SECRET = process.env.AUTH_TWITTER_SECRET;
-  }
-
-  if (process.env.AUTH_NOTION_ID && process.env.AUTH_NOTION_SECRET) {
-    object.AUTH_NOTION_ID = process.env.AUTH_NOTION_ID;
-    object.AUTH_NOTION_SECRET = process.env.AUTH_NOTION_SECRET;
-  }
-
-  if (process.env.AUTH_NOTION_ID && process.env.AUTH_NOTION_SECRET) {
-    object.AUTH_NOTION_ID = process.env.AUTH_NOTION_ID;
-    object.AUTH_NOTION_SECRET = process.env.AUTH_NOTION_SECRET;
-  }
-
-  return object;
-};
+// Removed createAuthSchema and authRuntimeEnv functions as they are NextAuth specific
 
 const createImageModelSchema = () => {
   const imageModelSchema = {};
@@ -107,10 +38,7 @@ export const env = createEnv({
    */
   server: {
     APP_URL: z.string().url(),
-    AUTH_SECRET:
-      process.env.NODE_ENV === "production"
-        ? z.string()
-        : z.string().optional(),
+    // AUTH_SECRET: process.env.NODE_ENV === "production" ? z.string() : z.string().optional(), // Removed
     DATABASE_URL: z.string().url(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
@@ -119,7 +47,10 @@ export const env = createEnv({
     EXA_API_KEY: z.string().optional(),
     MEM0_API_KEY: z.string().optional(),
     E2B_API_KEY: z.string().optional(),
-    ...createAuthSchema(),
+    // Add Clerk server-side keys
+    CLERK_SECRET_KEY: z.string().startsWith("sk_"),
+    CLERK_WEBHOOK_SECRET: z.string().startsWith("whsec_").optional(), // Optional
+    // ...createAuthSchema(), // Removed
     ...createImageModelSchema(),
   },
 
@@ -129,6 +60,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().startsWith("pk_"),
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
   },
 
@@ -138,14 +70,19 @@ export const env = createEnv({
    */
   runtimeEnv: {
     APP_URL: process.env.APP_URL,
-    AUTH_SECRET: process.env.AUTH_SECRET,
+    // AUTH_SECRET: process.env.AUTH_SECRET, // Removed
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
     OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
     EXA_API_KEY: process.env.EXA_API_KEY,
     MEM0_API_KEY: process.env.MEM0_API_KEY,
     E2B_API_KEY: process.env.E2B_API_KEY,
-    ...authRuntimeEnv(),
+    // Add Clerk keys to runtimeEnv
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    // ...authRuntimeEnv(), // Removed
     ...imageModelRuntimeEnv(),
   },
   /**

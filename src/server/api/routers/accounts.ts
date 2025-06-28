@@ -14,7 +14,7 @@ export const accountsRouter = createTRPCRouter({
 
       const items = await ctx.db.account.findMany({
         where: {
-          userId: ctx.session.user.id,
+          userId: ctx.auth.userId, // Updated from ctx.session.user.id
         },
         take: limit + 1,
         cursor: cursor ? { id: cursor } : undefined,
@@ -37,7 +37,7 @@ export const accountsRouter = createTRPCRouter({
       return ctx.db.account.findFirst({
         where: {
           id: input,
-          userId: ctx.session.user.id,
+          userId: ctx.auth.userId, // Updated from ctx.session.user.id
         },
       });
     }),
@@ -47,7 +47,7 @@ export const accountsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return ctx.db.account.findFirst({
         where: {
-          userId: ctx.session.user.id,
+          userId: ctx.auth.userId, // Updated from ctx.session.user.id
           provider: input,
         },
       });
@@ -57,7 +57,7 @@ export const accountsRouter = createTRPCRouter({
     .input(z.string())
     .query(async ({ ctx, input }) => {
       const account = await ctx.db.account.findFirst({
-        where: { userId: ctx.session.user.id, provider: input },
+        where: { userId: ctx.auth.userId, provider: input }, // Updated from ctx.session.user.id
       });
 
       return !!account;
@@ -66,11 +66,21 @@ export const accountsRouter = createTRPCRouter({
   deleteAccount: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
+      // Coderabbit suggestion: Use findFirst then delete to ensure ownership and use unique filter for delete
+      const account = await ctx.db.account.findUnique({
+        where: { id: input },
+      });
+
+      if (!account) {
+        throw new Error("Account link not found.");
+      }
+
+      if (account.userId !== ctx.auth.userId) {
+        throw new Error("Access denied. You can only delete your own account links.");
+      }
+
       return ctx.db.account.delete({
-        where: {
-          id: input,
-          userId: ctx.session.user.id,
-        },
+        where: { id: input }, // Delete by unique id after verification
       });
     }),
 });
