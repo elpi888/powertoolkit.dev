@@ -72,7 +72,7 @@ const PureMultimodalInput: React.FC<Props> = ({
     if (textareaRef.current) {
       adjustHeight();
     }
-  }, []);
+  }, [adjustHeight]); // Added adjustHeight to dependency array
 
   const adjustHeight = useCallback(() => {
     if (textareaRef.current) {

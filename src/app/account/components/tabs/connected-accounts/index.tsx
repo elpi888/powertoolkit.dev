@@ -7,7 +7,12 @@ import { DisconnectButton } from "./connect-disconnect"; // ConnectButton remove
 import { env } from "@/env";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import type { Account as PrismaAccount } from "@prisma/client"; // Added type import
+import type { inferRouterOutputs } from "@trpc/server"; // For tRPC type inference
+import type { AppRouter } from "@/server/api/root"; // Root AppRouter type
+
+// Infer the output type of the getAccounts procedure
+type RouterOutput = inferRouterOutputs<AppRouter>;
+type PrismaAccount = RouterOutput['accounts']['getAccounts']['items'][number];
 
 export const ConnectedAccounts = async () => {
   const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
