@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { ToolkitGroups } from "@/toolkits/types";
+import { env } from "@/env";
 
 export const notionClientToolkit = createClientToolkit(
   baseNotionToolkitConfig,
@@ -27,10 +28,14 @@ export const notionClientToolkit = createClientToolkit(
     icon: SiNotion,
     form: null,
     addToolkitWrapper: ({ children }) => {
-      const { data: hasAccount, isLoading } =
-        api.accounts.hasProviderAccount.useQuery("notion");
+      const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
 
-      if (isLoading) {
+      const { data: hasAccount, isLoading } =
+        api.accounts.hasProviderAccount.useQuery("notion", {
+          enabled: !useClerkAccounts, // Only run if not using Clerk accounts
+        });
+
+      if (isLoading && !useClerkAccounts) { // Only show loader if query is running
         return (
           <Button
             variant="outline"

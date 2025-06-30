@@ -9,6 +9,7 @@ import {
 import { GithubTools } from "./tools";
 import { api } from "@/trpc/server";
 import { Octokit } from "octokit";
+import { env } from "@/env";
 
 export const githubToolkitServer = createServerToolkit(
   baseGithubToolkitConfig,
@@ -31,11 +32,25 @@ export const githubToolkitServer = createServerToolkit(
 - When analyzing projects, start with repository overview then drill down into specific code patterns
 - For technical research, search code first to find implementations, then explore the containing repositories`,
   async () => {
+    const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
+
+    if (useClerkAccounts) {
+      // If Clerk accounts are active, the old way of getting accounts is disabled.
+      // This toolkit will effectively be disabled until migrated to Clerk.
+      console.warn("GitHub Server Toolkit: Attempted to initialize with legacy accounts while Clerk is active. Toolkit will be disabled.");
+      return {}; // Return empty tools, effectively disabling the toolkit
+    }
+
     const account = await api.accounts.getAccountByProvider("github");
 
     if (!account) {
-      throw new Error("No account found");
+      throw new Error("No GitHub account found (legacy accounts).");
     }
+    // Assuming access_token is mandatory if account is found
+    if (!account.access_token) {
+      throw new Error("No GitHub access token found (legacy accounts).");
+    }
+
 
     const octokit = new Octokit({
       auth: account.access_token,

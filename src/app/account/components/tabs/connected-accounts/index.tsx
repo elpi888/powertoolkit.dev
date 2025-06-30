@@ -4,8 +4,22 @@ import { HStack } from "@/components/ui/stack";
 import { providers } from "@/server/auth/providers";
 import { api } from "@/trpc/server";
 import { ConnectButton, DisconnectButton } from "./connect-disconnect";
+import { env } from "@/env";
 
 export const ConnectedAccounts = async () => {
+  const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
+
+  if (useClerkAccounts) {
+    return (
+      <div className="flex flex-col gap-2">
+        <p className="text-muted-foreground">
+          Connected accounts are now managed through your Clerk user profile.
+          {/* TODO: Consider adding a direct link to the Clerk user profile / connections page */}
+        </p>
+      </div>
+    );
+  }
+
   const accounts = await api.accounts.getAccounts({
     limit: 100,
   });

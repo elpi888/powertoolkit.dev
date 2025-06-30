@@ -14,6 +14,7 @@ import {
 import { NotionTools } from "./tools";
 import { api } from "@/trpc/server";
 import { Client } from "@notionhq/client";
+import { env } from "@/env";
 
 export const notionToolkitServer = createServerToolkit(
   baseNotionToolkitConfig,
@@ -50,13 +51,22 @@ If the user has memory enabled and they ask you to make content, check the memor
 - Combine page content with block-level details for comprehensive information extraction
 - Consider user permissions and workspace structure when creating or modifying content`,
   async () => {
+    const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
+
+    if (useClerkAccounts) {
+      // If Clerk accounts are active, the old way of getting accounts is disabled.
+      // This toolkit will effectively be disabled until migrated to Clerk.
+      console.warn("Notion Server Toolkit: Attempted to initialize with legacy accounts while Clerk is active. Toolkit will be disabled.");
+      return {}; // Return empty tools, effectively disabling the toolkit
+    }
+
     const account = await api.accounts.getAccountByProvider("notion");
 
     if (!account) {
-      throw new Error("No Notion account found");
+      throw new Error("No Notion account found (legacy accounts).");
     }
     if (!account.access_token) {
-      throw new Error("No Notion access token found");
+      throw new Error("No Notion access token found (legacy accounts).");
     }
 
     const notion = new Client({

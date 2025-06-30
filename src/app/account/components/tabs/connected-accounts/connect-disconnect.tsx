@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 
 import { api } from "@/trpc/react";
 // import { signIn } from "next-auth/react"; // Removed: Clerk handles connections differently
+import { env } from "@/env";
 
 interface ConnectProps {
   provider: string;
@@ -28,7 +29,7 @@ export const ConnectButton: React.FC<ConnectProps> = ({ provider }) => {
         );
       }}
     >
-      Connect {/* This button may need to be re-purposed or removed */}
+      Coming Soon {/* Clerk integration pending */}
     </Button>
   );
 };
@@ -38,6 +39,7 @@ interface DisconnectProps {
 }
 
 export const DisconnectButton: React.FC<DisconnectProps> = ({ accountId }) => {
+  const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
   const router = useRouter();
   const utils = api.useUtils();
   const {
@@ -52,18 +54,26 @@ export const DisconnectButton: React.FC<DisconnectProps> = ({ accountId }) => {
     },
   });
 
+  const handleDisconnect = () => {
+    if (useClerkAccounts) {
+      toast.info("Managing connected accounts is now done through your Clerk user profile.");
+    } else {
+      void deleteAccount(accountId);
+    }
+  };
+
   return (
     <Button
       variant="outline"
-      onClick={() => {
-        void deleteAccount(accountId);
-      }}
-      disabled={isPending}
+      onClick={handleDisconnect}
+      // If Clerk is active, the button should appear disabled unless an old (non-Clerk) operation is somehow pending.
+      // Effectively, if useClerkAccounts is true, this button does nothing destructive.
+      disabled={isPending || useClerkAccounts}
     >
       Disconnect
       {isPending ? (
         <Loader2 className="animate-spin" />
-      ) : isSuccess ? (
+      ) : isSuccess && !useClerkAccounts ? ( // Only show check if legacy op succeeded
         <Check />
       ) : null}
     </Button>

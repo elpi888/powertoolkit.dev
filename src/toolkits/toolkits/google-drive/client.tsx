@@ -21,6 +21,7 @@ import Link from "next/link";
 import { SiGoogledrive } from "@icons-pack/react-simple-icons";
 import { ToolkitGroups } from "@/toolkits/types";
 import { Toolkits } from "../shared";
+import { env } from "@/env";
 
 const driveScope = "https://www.googleapis.com/auth/drive.readonly";
 
@@ -32,8 +33,12 @@ export const googleDriveClientToolkit = createClientToolkit(
     icon: SiGoogledrive,
     form: null,
     addToolkitWrapper: ({ children }) => {
+      const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
+
       const { data: account, isLoading: isLoadingAccount } =
-        api.accounts.getAccountByProvider.useQuery("google");
+        api.accounts.getAccountByProvider.useQuery("google", {
+          enabled: !useClerkAccounts, // Only run if not using Clerk accounts
+        });
 
       const { data: hasAccess, isLoading: isLoadingAccess } =
         api.features.hasFeature.useQuery({

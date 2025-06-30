@@ -6,6 +6,7 @@ import {
 } from "./tools/server";
 import { GoogleDriveTools } from "./tools";
 import { api } from "@/trpc/server";
+import { env } from "@/env";
 
 export const googleDriveToolkitServer = createServerToolkit(
   baseGoogleDriveToolkitConfig,
@@ -26,14 +27,23 @@ export const googleDriveToolkitServer = createServerToolkit(
 - Combine search results from multiple queries to get comprehensive document coverage
 - Use folder-based searches when documents are organized in specific directory structures`,
   async () => {
+    const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
+
+    if (useClerkAccounts) {
+      // If Clerk accounts are active, the old way of getting accounts is disabled.
+      // This toolkit will effectively be disabled until migrated to Clerk.
+      console.warn("Google Drive Server Toolkit: Attempted to initialize with legacy accounts while Clerk is active. Toolkit will be disabled.");
+      return {}; // Return empty tools, effectively disabling the toolkit
+    }
+
     const account = await api.accounts.getAccountByProvider("google");
 
     if (!account?.access_token) {
-      throw new Error("No Google account found or access token missing");
+      throw new Error("No Google account found or access token missing (legacy accounts).");
     }
 
     if (!account.scope?.includes("drive.readonly")) {
-      throw new Error("Google account does not have drive.readonly scope");
+      throw new Error("Google account does not have drive.readonly scope (legacy accounts).");
     }
 
     return {

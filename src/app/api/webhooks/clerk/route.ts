@@ -54,6 +54,15 @@ async function handler(req: Request) {
 
   console.log(`Received webhook event: ${eventType}`);
 
+  const getEmailVerifiedDate = (eventData: UserJSON): Date | null => {
+    const primaryEmail = eventData.email_addresses.find(
+      (email) => email.id === eventData.primary_email_address_id,
+    );
+    return primaryEmail?.verification?.status === "verified"
+      ? new Date(eventData.updated_at * 1000)
+      : null;
+  };
+
   try {
     switch (eventType) {
       case "user.created":
@@ -67,14 +76,7 @@ async function handler(req: Request) {
               ? `${eventData.first_name} ${eventData.last_name ?? ""}`.trim()
               : eventData.username, // Fallback to username if name parts are not available
             image: eventData.image_url,
-            emailVerified: (() => {
-              const primaryEmail = eventData.email_addresses.find(
-                (email) => email.id === eventData.primary_email_address_id,
-              );
-              return primaryEmail?.verification?.status === "verified"
-                ? new Date(eventData.updated_at * 1000) // updated_at is Unix timestamp in seconds
-                : null;
-            })(),
+            emailVerified: getEmailVerifiedDate(eventData),
             // Note: external_id is not directly available on eventData.data for user.created
             // If mapping by external_id was critical at creation via webhook,
             // this would need a more complex flow or reliance on JWT customisation for subsequent linking.
@@ -95,14 +97,7 @@ async function handler(req: Request) {
               ? `${eventData.first_name} ${eventData.last_name ?? ""}`.trim()
               : eventData.username,
             image: eventData.image_url,
-            emailVerified: (() => {
-              const primaryEmail = eventData.email_addresses.find(
-                (email) => email.id === eventData.primary_email_address_id,
-              );
-              return primaryEmail?.verification?.status === "verified"
-                ? new Date(eventData.updated_at * 1000) // updated_at is Unix timestamp in seconds
-                : null;
-            })(),
+            emailVerified: getEmailVerifiedDate(eventData),
           },
         });
         console.log(`User ${eventData.id} updated in local DB.`);

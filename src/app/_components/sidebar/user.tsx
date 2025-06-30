@@ -34,7 +34,9 @@ export function NavUser() { // Removed user prop
     return null;
   }
 
-  const userName = user.fullName ?? user.emailAddresses[0]?.emailAddress.split('@')[0] ?? "User";
+  const userName = user.fullName ??
+    (user.primaryEmailAddress?.emailAddress.split('@')[0]) ??
+    "User";
   const userEmail = user.primaryEmailAddress?.emailAddress ?? "";
   const userAvatar = user.imageUrl;
   const userInitials = userName?.charAt(0).toUpperCase() ?? "U";
