@@ -17,10 +17,11 @@ async function createHandlerWithParams(
         model: "openai:gpt-image-1",
       });
 
-      Object.entries(tools).forEach(([toolName, tool]) => {
-        const { description, inputSchema, callback, message } = tool;
-        mcpServer.tool(
-          toolName,
+      if (tools) { // Check if tools is not null
+        Object.entries(tools).forEach(([toolName, tool]) => {
+          const { description, inputSchema, callback, message } = tool;
+          mcpServer.tool(
+            toolName,
           description,
           inputSchema.shape,
           async (args) => {
@@ -41,6 +42,10 @@ async function createHandlerWithParams(
           },
         );
       });
+      } else {
+        // Optional: log that the toolkit was disabled or had no tools
+        console.warn(`[MCP Handler] Toolkit '${server}' provided no tools or is disabled.`);
+      }
     },
     {
       // Optional server options
