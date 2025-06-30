@@ -7,6 +7,7 @@ import { DisconnectButton } from "./connect-disconnect"; // ConnectButton remove
 import { env } from "@/env";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import type { Account as PrismaAccount } from "@prisma/client"; // Added type import
 
 export const ConnectedAccounts = async () => {
   const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
@@ -47,7 +48,7 @@ export const ConnectedAccounts = async () => {
       <p className="text-sm text-muted-foreground mb-2">
         The following are previously connected accounts. Please manage all connections via your user profile going forward.
       </p>
-      {legacyAccounts.map((account) => (
+      {legacyAccounts.map((account: PrismaAccount) => (
         <HStack
           key={account.id}
           className="w-full justify-between rounded-md border px-4 py-2"
