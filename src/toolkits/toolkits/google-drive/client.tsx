@@ -101,15 +101,14 @@ export const googleDriveClientToolkit = createClientToolkit(
             onClick={() => {
               // TODO: Refactor for Clerk.
               // This should ideally link to Clerk's User Profile page where connections can be managed,
-              // or use a Clerk-provided method to initiate the Google connection with correct scopes.
-              // The tRPC call api.accounts.getAccountByProvider is also now based on obsolete data.
-              toast.info(
-                "Connect Google Drive via your user profile (functionality pending). Ensure Drive scopes are granted.",
-              );
+              // This legacy path implies Clerk is not yet the primary method for this user,
+              // but we guide them towards the new central place for connections.
+              toast.info("Please manage your Google Drive connection via your user profile.");
+              window.open('/user-profile#connected-accounts', '_blank');
             }}
             className="bg-transparent"
           >
-            Connect {/* Button's purpose needs to be re-evaluated with Clerk */}
+            Manage Connection
           </Button>
         );
       }
@@ -122,15 +121,14 @@ export const googleDriveClientToolkit = createClientToolkit(
             onClick={() => {
               // TODO: Refactor for Clerk.
               // This should ideally link to Clerk's User Profile page where connections can be managed,
-              // or use a Clerk-provided method to re-authenticate/request additional scopes for Google.
-              // The logic for checking account?.scope is based on obsolete data.
-              toast.info(
-                "Grant Google Drive access via your user profile (functionality pending).",
-              );
+              // This legacy path implies Clerk is not yet the primary method for this user,
+              // but we guide them towards the new central place for connections and permissions.
+              toast.info("Please update Google Drive permissions via your user profile.");
+              window.open('/user-profile#connected-accounts', '_blank');
             }}
             className="bg-transparent"
           >
-            Grant Access {/* Button's purpose needs to be re-evaluated with Clerk */}
+            Update Permissions
           </Button>
         );
       }

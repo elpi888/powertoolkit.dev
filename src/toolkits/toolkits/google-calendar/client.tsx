@@ -162,14 +162,14 @@ export const googleCalendarClientToolkit = createClientToolkit(
               // TODO: Refactor for Clerk.
               // This should ideally link to Clerk's User Profile page where connections can be managed,
               // or use a Clerk-provided method to initiate the Google connection with correct scopes.
-              // The tRPC call api.accounts.getAccountByProvider is also now based on obsolete data.
-              toast.info(
-                "Connect Google Calendar via your user profile (functionality pending). Ensure calendar scopes are granted.",
-              );
+              // This legacy path implies Clerk is not yet the primary method for this user,
+              // but we guide them towards the new central place for connections.
+              toast.info("Please manage your Google Calendar connection via your user profile.");
+              window.open('/user-profile#connected-accounts', '_blank');
             }}
             className="bg-transparent"
           >
-            Connect {/* Button's purpose needs to be re-evaluated with Clerk */}
+            Manage Connection
           </Button>
         );
       }
@@ -182,14 +182,14 @@ export const googleCalendarClientToolkit = createClientToolkit(
             onClick={() => {
               // TODO: Refactor for Clerk.
               // This should ideally link to Clerk's User Profile page where connections can be managed,
-              // or use a Clerk-provided method to re-authenticate/request additional scopes for Google.
-              // The logic for checking account?.scope is based on obsolete data.
-              toast.info(
-                "Grant Google Calendar access via your user profile (functionality pending).",
-              );
+              // This legacy path implies Clerk is not yet the primary method for this user,
+              // but we guide them towards the new central place for connections and permissions.
+              toast.info("Please update Google Calendar permissions via your user profile.");
+              window.open('/user-profile#connected-accounts', '_blank');
             }}
+            className="bg-transparent" // Added className for consistency
           >
-            Grant Access {/* Button's purpose needs to be re-evaluated with Clerk */}
+            Update Permissions
           </Button>
         );
       }
