@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { auth } from "@/server/auth";
+import { auth } from "@clerk/nextjs/server"; // Changed to Clerk's auth
 import { api, HydrateClient } from "@/trpc/server";
 
 import {
@@ -24,17 +24,29 @@ import { WorkbenchSelect } from "./workbench-select";
 export async function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const [session] = await Promise.all([auth()]);
+  // const [session] = await Promise.all([auth()]); // Old NextAuth
+  const authData = await auth(); // Clerk's auth
 
-  if (!session) {
+  // If user is not authenticated, don't render the sidebar content that requires auth
+  // The NavUser component itself handles its signed-in/signed-out state via useUser hook.
+  // This check is more about whether to prefetch data or render parts of the sidebar
+  // that are only relevant for authenticated users.
+  if (!authData.userId) {
+    // Depending on desired UX, could return null or a minimal sidebar
+    // For now, let's assume if no userId, some parts won't fetch.
+    // The NavUser component will show its signed-out state.
+    // If the entire sidebar should be hidden, return null.
+    // Let's return null for now if the intent is that this sidebar is for auth'd users.
+    // However, NavUser itself uses useUser, so it can show a login button.
+    // The original logic was `if (!session) return null;`
+    // So, keeping that spirit:
     return null;
   }
 
-  if (session?.user) {
-    void api.workbenches.getWorkbenches.prefetchInfinite({
-      limit: 10,
-    });
-  }
+  // If user is authenticated (authData.userId exists)
+  void api.workbenches.getWorkbenches.prefetchInfinite({
+    limit: 10,
+  });
 
   return (
     <HydrateClient>
@@ -80,13 +92,8 @@ export async function AppSidebar({
               </VStack>
             </Link>
           </SidebarMenuButton>
-          <NavUser
-            user={{
-              name: session.user.name ?? "User",
-              email: session.user.email ?? "",
-              avatar: session.user.image ?? "",
-            }}
-          />
+          <NavUser />
+          {/* NavUser now uses useUser hook internally, no props needed from here */}
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>

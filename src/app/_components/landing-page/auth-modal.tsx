@@ -6,10 +6,11 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { AuthButtons } from "../auth/auth-buttons";
-import { providers } from "@/server/auth/providers";
+// import { AuthButtons } from "../auth/auth-buttons"; // Removed
+// import { providers } from "@/server/auth/providers"; // Removed
 import { Logo } from "@/components/ui/logo";
 import { VStack } from "@/components/ui/stack";
+import { SignInButton, SignUpButton } from "@clerk/nextjs"; // Added Clerk buttons
 
 interface AuthModalProps {
   children: React.ReactNode;
@@ -31,12 +32,16 @@ export const AuthModal = ({ children }: AuthModalProps) => {
             </DialogDescription>
           </VStack>
         </DialogHeader>
-        <AuthButtons
-          providers={providers.map((provider) => ({
-            name: provider.name,
-            id: provider.id,
-          }))}
-        />
+        <VStack className="gap-2">
+          <SignInButton mode="modal">
+            <button className="bg-primary text-primary-foreground hover:bg-primary/90 w-full rounded-md px-4 py-2">Sign In</button>
+          </SignInButton>
+          <SignUpButton mode="modal">
+            <button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 w-full rounded-md px-4 py-2">Sign Up</button>
+          </SignUpButton>
+          {/* TODO: Add more specific Clerk sign-in options if needed, e.g., social providers */}
+          {/* Or embed <SignIn /> component directly if more control over the form is needed */}
+        </VStack>
       </DialogContent>
     </Dialog>
   );

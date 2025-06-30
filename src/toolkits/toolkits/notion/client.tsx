@@ -15,7 +15,7 @@ import {
 import { SiNotion } from "@icons-pack/react-simple-icons";
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
-import { signIn } from "next-auth/react";
+// import { signIn } from "next-auth/react"; // Removed
 import { Loader2 } from "lucide-react";
 import { ToolkitGroups } from "@/toolkits/types";
 import { env } from "@/env";
@@ -85,13 +85,13 @@ export const notionClientToolkit = createClientToolkit(
               variant="outline"
               size="sm"
               onClick={() => {
-                void signIn("notion", {
-                  callbackUrl: window.location.href,
-                });
+                // Guide user to profile for connection, even in legacy path
+                toast.info("Please manage your Notion connection via your user profile.");
+                window.open('/user-profile#connected-accounts', '_blank');
               }}
               className="bg-transparent"
             >
-              Connect
+              Manage Connection
             </Button>
           );
         }
