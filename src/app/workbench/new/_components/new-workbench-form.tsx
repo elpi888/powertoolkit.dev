@@ -23,6 +23,9 @@ import {
 import { Anvil, Plus } from "lucide-react";
 import { ToolkitIcons } from "@/components/toolkit/toolkit-icons";
 import { clientToolkits } from "@/toolkits/toolkits/client";
+import { useMemo } from "react"; // Added useMemo
+import { env } from "@/env"; // Added env
+import { Toolkits as ToolkitsEnum } from "@/toolkits/toolkits/shared"; // For enum access
 
 export function NewWorkbenchForm() {
   const router = useRouter();
@@ -31,6 +34,22 @@ export function NewWorkbenchForm() {
   const [selectedToolkits, setSelectedToolkits] = useState<SelectedToolkit[]>(
     [],
   );
+
+  const useClerkAccounts = useMemo(() => env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED, []);
+  const legacyToolkitsToHideWhenClerkActive: ToolkitsEnum[] = useMemo(() => [
+    ToolkitsEnum.Github,
+    ToolkitsEnum.GoogleCalendar,
+    ToolkitsEnum.Notion,
+    ToolkitsEnum.GoogleDrive,
+  ], []);
+
+  const displayableToolkitIds = useMemo(() => {
+    const allIds = Object.keys(clientToolkits) as ToolkitsEnum[];
+    if (useClerkAccounts) {
+      return allIds.filter(id => !legacyToolkitsToHideWhenClerkActive.includes(id));
+    }
+    return allIds;
+  }, [useClerkAccounts, legacyToolkitsToHideWhenClerkActive]);
 
   const createMutation = api.workbenches.createWorkbench.useMutation({
     onSuccess: (workbench) => {
@@ -159,7 +178,7 @@ export function NewWorkbenchForm() {
                           </p>
                         </HStack>
                         <ToolkitIcons
-                          toolkits={Object.keys(clientToolkits) as Toolkits[]}
+                          toolkits={displayableToolkitIds}
                           iconContainerClassName="bg-background"
                           iconClassName="text-muted-foreground"
                         />

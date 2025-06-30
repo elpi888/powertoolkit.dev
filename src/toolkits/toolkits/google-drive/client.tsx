@@ -22,6 +22,7 @@ import { SiGoogledrive } from "@icons-pack/react-simple-icons";
 import { ToolkitGroups } from "@/toolkits/types";
 import { Toolkits } from "../shared";
 import { env } from "@/env";
+import { useMemo } from "react";
 
 const driveScope = "https://www.googleapis.com/auth/drive.readonly";
 
@@ -33,32 +34,21 @@ export const googleDriveClientToolkit = createClientToolkit(
     icon: SiGoogledrive,
     form: null,
     addToolkitWrapper: ({ children }) => {
-      const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
+      const useClerkAccounts = useMemo(() => env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED, []);
 
-      const { data: account, isLoading: isLoadingAccount } =
-        api.accounts.getAccountByProvider.useQuery("google", {
-          enabled: !useClerkAccounts, // Only run if not using Clerk accounts
-        });
+      // Common: Check for feature access first
+      const { data: hasFeatureAccess, isLoading: isLoadingFeatureAccess } =
+        api.features.hasFeature.useQuery({ feature: "google-drive" });
 
-      const { data: hasAccess, isLoading: isLoadingAccess } =
-        api.features.hasFeature.useQuery({
-          feature: "google-drive",
-        });
-
-      if (isLoadingAccount || isLoadingAccess) {
+      if (isLoadingFeatureAccess) {
         return (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled
-            className="bg-transparent"
-          >
+          <Button variant="outline" size="sm" disabled className="bg-transparent">
             <Loader2 className="size-4 animate-spin" />
           </Button>
         );
       }
 
-      if (!hasAccess) {
+      if (!hasFeatureAccess) {
         return (
           <TooltipProvider>
             <Tooltip>
@@ -80,6 +70,26 @@ export const googleDriveClientToolkit = createClientToolkit(
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+        );
+      }
+
+      // Feature access is granted, now handle Clerk vs Legacy
+      if (useClerkAccounts) {
+        // TODO: Implement Clerk-based account and scope checking here for Google Drive.
+        // For now, if Clerk is active and feature access is granted, render children.
+        // Connection status is assumed to be handled by Clerk's global UI / UserProfile.
+        return children;
+      }
+
+      // Legacy path (useClerkAccounts is false and hasFeatureAccess is true)
+      const { data: account, isLoading: isLoadingAccount } =
+        api.accounts.getAccountByProvider.useQuery("google"); // Query runs as useClerkAccounts is false
+
+      if (isLoadingAccount) {
+        return (
+          <Button variant="outline" size="sm" disabled className="bg-transparent">
+            <Loader2 className="size-4 animate-spin" />
+          </Button>
         );
       }
 

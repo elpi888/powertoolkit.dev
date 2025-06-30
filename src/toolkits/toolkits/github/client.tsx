@@ -16,6 +16,8 @@ import { ToolkitGroups } from "@/toolkits/types";
 import { Toolkits } from "../shared";
 import { toast } from "sonner"; // For placeholder action
 import { env } from "@/env";
+import { useMemo } from "react";
+import { useUser } from "@clerk/nextjs";
 
 export const githubClientToolkit = createClientToolkit(
   baseGithubToolkitConfig,
@@ -25,46 +27,71 @@ export const githubClientToolkit = createClientToolkit(
     icon: SiGithub,
     form: null,
     addToolkitWrapper: ({ children }) => {
-      const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
+      const useClerkAccounts = useMemo(() => env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED, []);
+      const { user, isLoaded: isUserLoaded } = useUser();
 
-      const { data: hasAccount, isLoading } =
-        api.accounts.hasProviderAccount.useQuery("github", {
-          enabled: !useClerkAccounts, // Only run if not using Clerk accounts
-        });
-
-      if (isLoading && !useClerkAccounts) { // Only show loader if query is running
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled
-            className="bg-transparent"
-          >
-            <Loader2 className="size-4 animate-spin" />
-          </Button>
+      if (useClerkAccounts) {
+        if (!isUserLoaded) {
+          return ( // Clerk User loading
+            <Button variant="outline" size="sm" disabled className="bg-transparent">
+              <Loader2 className="size-4 animate-spin" />
+            </Button>
+          );
+        }
+        const hasGithubConnection = user?.externalAccounts?.some(
+          (acc) => acc.provider === "oauth_github"
         );
-      }
 
-      if (!hasAccount) {
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              // TODO: Refactor for Clerk.
-              // This should ideally link to Clerk's User Profile page where connections can be managed,
-              // or use a Clerk-provided method to initiate the GitHub connection.
-              // The tRPC call api.accounts.hasProviderAccount is also now based on obsolete data.
-              toast.info("Connect GitHub via your user profile (functionality pending).");
-            }}
-            className="bg-transparent"
-          >
-            Connect {/* Button's purpose needs to be re-evaluated with Clerk */}
-          </Button>
-        );
-      }
+        if (!hasGithubConnection) {
+          // TODO: This button should ideally link to Clerk's User Profile connection management page
+          // or use a Clerk SDK method to initiate the connection flow.
+          return (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                toast.info("Manage GitHub connection via your user profile.");
+                // Example: window.open('/user-profile#connections', '_blank');
+              }}
+              className="bg-transparent"
+            >
+              Connect GitHub
+            </Button>
+          );
+        }
+        return children; // Clerk user has GitHub connection
+      } else {
+        // Legacy path (useClerkAccounts is false)
+        // The hook is defined here, but only enabled if !useClerkAccounts
+        const { data: hasLegacyAccount, isLoading: isLoadingLegacy } =
+          api.accounts.hasProviderAccount.useQuery("github", {
+            enabled: !useClerkAccounts, // This ensures it only runs in the legacy path
+          });
 
-      return children;
+        if (isLoadingLegacy) {
+          return (
+            <Button variant="outline" size="sm" disabled className="bg-transparent">
+              <Loader2 className="size-4 animate-spin" />
+            </Button>
+          );
+        }
+
+        if (!hasLegacyAccount) {
+          return ( // Legacy Connect Button (shows toast, as per previous state)
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                toast.info("Connect GitHub via your user profile (legacy: functionality pending).");
+              }}
+              className="bg-transparent"
+            >
+              Connect
+            </Button>
+          );
+        }
+        return children; // Legacy account exists
+      }
     },
     type: ToolkitGroups.DataSource,
   },

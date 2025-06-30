@@ -61,7 +61,7 @@ export const env = createEnv({
    */
   client: {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().startsWith("pk_"),
-    NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED: z.string().optional().default("false"),
+    NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED: z.coerce.boolean().optional().default(false),
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
   },
 
@@ -83,7 +83,7 @@ export const env = createEnv({
     CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-    NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED: process.env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED ?? "false",
+    NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED: process.env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED,
     // ...authRuntimeEnv(), // Removed
     ...imageModelRuntimeEnv(),
   },

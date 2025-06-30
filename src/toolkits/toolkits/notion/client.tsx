@@ -19,6 +19,8 @@ import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { ToolkitGroups } from "@/toolkits/types";
 import { env } from "@/env";
+import { useMemo } from "react";
+import { useUser } from "@clerk/nextjs";
 
 export const notionClientToolkit = createClientToolkit(
   baseNotionToolkitConfig,
@@ -28,44 +30,73 @@ export const notionClientToolkit = createClientToolkit(
     icon: SiNotion,
     form: null,
     addToolkitWrapper: ({ children }) => {
-      const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
+      const useClerkAccounts = useMemo(() => env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED, []);
+      const { user, isLoaded: isUserLoaded } = useUser();
 
-      const { data: hasAccount, isLoading } =
-        api.accounts.hasProviderAccount.useQuery("notion", {
-          enabled: !useClerkAccounts, // Only run if not using Clerk accounts
-        });
-
-      if (isLoading && !useClerkAccounts) { // Only show loader if query is running
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled
-            className="bg-transparent"
-          >
-            <Loader2 className="size-4 animate-spin" />
-          </Button>
+      if (useClerkAccounts) {
+        if (!isUserLoaded) {
+          return ( // Clerk User loading
+            <Button variant="outline" size="sm" disabled className="bg-transparent">
+              <Loader2 className="size-4 animate-spin" />
+            </Button>
+          );
+        }
+        // Assuming Clerk provider ID for Notion is 'oauth_notion'
+        const hasNotionConnection = user?.externalAccounts?.some(
+          (acc) => acc.provider === "oauth_notion"
         );
-      }
 
-      if (!hasAccount) {
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              void signIn("notion", {
-                callbackUrl: window.location.href,
-              });
-            }}
-            className="bg-transparent"
-          >
-            Connect
-          </Button>
-        );
-      }
+        if (!hasNotionConnection) {
+          // TODO: This button should ideally link to Clerk's User Profile connection management page
+          // or use a Clerk SDK method to initiate the connection flow for Notion.
+          return (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                toast.info("Manage Notion connection via your user profile.");
+                // Example: window.open('/user-profile#connections', '_blank');
+              }}
+              className="bg-transparent"
+            >
+              Connect Notion
+            </Button>
+          );
+        }
+        return children; // Clerk user has Notion connection
+      } else {
+        // Legacy path (useClerkAccounts is false)
+        const { data: hasLegacyAccount, isLoading: isLoadingLegacy } =
+          api.accounts.hasProviderAccount.useQuery("notion", {
+            enabled: !useClerkAccounts, // This ensures it only runs in the legacy path
+          });
 
-      return children;
+        if (isLoadingLegacy) {
+          return (
+            <Button variant="outline" size="sm" disabled className="bg-transparent">
+              <Loader2 className="size-4 animate-spin" />
+            </Button>
+          );
+        }
+
+        if (!hasLegacyAccount) {
+          return ( // Legacy Connect Button (original signIn logic)
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                void signIn("notion", {
+                  callbackUrl: window.location.href,
+                });
+              }}
+              className="bg-transparent"
+            >
+              Connect
+            </Button>
+          );
+        }
+        return children; // Legacy account exists
+      }
     },
     type: ToolkitGroups.KnowledgeBase,
   },

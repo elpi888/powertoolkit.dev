@@ -5,17 +5,21 @@ import { providers } from "@/server/auth/providers";
 import { api } from "@/trpc/server";
 import { ConnectButton, DisconnectButton } from "./connect-disconnect";
 import { env } from "@/env";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export const ConnectedAccounts = async () => {
-  const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
+  const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
 
   if (useClerkAccounts) {
     return (
       <div className="flex flex-col gap-2">
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mb-2">
           Connected accounts are now managed through your Clerk user profile.
-          {/* TODO: Consider adding a direct link to the Clerk user profile / connections page */}
         </p>
+        <Link href="/user-profile#connected-accounts" target="_blank" rel="noopener noreferrer">
+          <Button variant="outline">Manage Connections in Profile</Button>
+        </Link>
       </div>
     );
   }

@@ -33,13 +33,13 @@ export const googleCalendarToolkitServer = createServerToolkit(
 - When analyzing schedules, consider different calendar types (personal, work, shared calendars)
 - Check multiple calendars when assessing availability or conflicts`,
   async () => {
-    const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
+    const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
 
     if (useClerkAccounts) {
       // If Clerk accounts are active, the old way of getting accounts is disabled.
       // This toolkit will effectively be disabled until migrated to Clerk.
       console.warn("Google Calendar Server Toolkit: Attempted to initialize with legacy accounts while Clerk is active. Toolkit will be disabled.");
-      return {}; // Return empty tools, effectively disabling the toolkit
+      return null;
     }
 
     const account = await api.accounts.getAccountByProvider("google");

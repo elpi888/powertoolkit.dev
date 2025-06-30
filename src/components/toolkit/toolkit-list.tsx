@@ -14,12 +14,13 @@ import { Plus, Info } from "lucide-react";
 import { HStack, VStack } from "@/components/ui/stack";
 import { clientToolkits } from "@/toolkits/toolkits/client";
 import type { ClientToolkit } from "@/toolkits/types";
-import type { Toolkits } from "@/toolkits/toolkits/shared";
+import { Toolkits } from "@/toolkits/toolkits/shared"; // Keep this for Toolkits enum
 import { ClientToolkitConfigure } from "@/components/toolkit/toolkit-configure";
 import type { SelectedToolkit } from "./types";
 import { toolkitGroups } from "@/toolkits/toolkit-groups";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react"; // Added useMemo
+import { env } from "@/env"; // Added env
 
 interface ToolkitListProps {
   selectedToolkits: SelectedToolkit[];
@@ -35,9 +36,26 @@ export const ToolkitList: React.FC<ToolkitListProps> = ({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  const useClerkAccounts = useMemo(() => env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED, []);
+
+  const legacyToolkitsToHideWhenClerkActive: Toolkits[] = useMemo(() => [
+    Toolkits.Github,
+    Toolkits.GoogleCalendar,
+    Toolkits.Notion,
+    Toolkits.GoogleDrive,
+  ], []);
+
+  const availableToolkits = useMemo(() => {
+    return Object.entries(clientToolkits).filter(([id]) => {
+      if (useClerkAccounts) {
+        return !legacyToolkitsToHideWhenClerkActive.includes(id as Toolkits);
+      }
+      return true;
+    });
+  }, [useClerkAccounts, legacyToolkitsToHideWhenClerkActive]);
 
   useEffect(() => {
-    const updatedToolkits = Object.entries(clientToolkits).filter(([id]) => {
+    const updatedToolkits = availableToolkits.filter(([id]) => {
       return (
         searchParams.get(id) === "true" &&
         !selectedToolkits.some((t) => t.id === (id as Toolkits))
@@ -67,7 +85,7 @@ export const ToolkitList: React.FC<ToolkitListProps> = ({
                 <h3 className="font-bold">{group.name}</h3>
               </HStack>
               <div className="bg-muted/50 w-full rounded-md border">
-                {Object.entries(clientToolkits)
+                {availableToolkits
                   .filter(([, toolkit]) => toolkit.type === group.id)
                   .map(([id, toolkit]) => {
                     return (

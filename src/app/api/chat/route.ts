@@ -34,6 +34,8 @@ import type { Chat } from "@prisma/client";
 import { openai } from "@ai-sdk/openai";
 import { getServerToolkit } from "@/toolkits/toolkits/server";
 import { languageModels } from "@/ai/models";
+import { env } from "@/env";
+import { Toolkits } from "@/toolkits/toolkits/shared";
 
 export const maxDuration = 60;
 
@@ -77,9 +79,29 @@ export async function POST(request: Request) {
       selectedChatModel,
       useNativeSearch,
       systemPrompt,
-      toolkits,
+      // toolkits, // Will be replaced by activeToolkits
       workbenchId,
     } = requestBody;
+
+    const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
+    const legacyToolkitsToFilter: Toolkits[] = [
+      Toolkits.Github,
+      Toolkits.GoogleCalendar,
+      Toolkits.Notion,
+      Toolkits.GoogleDrive,
+    ];
+
+    let activeToolkits = requestBody.toolkits;
+    if (useClerkAccounts) {
+      const originalRequested = requestBody.toolkits.map(t => t.id);
+      activeToolkits = requestBody.toolkits.filter(
+        (requestedToolkit) => !legacyToolkitsToFilter.includes(requestedToolkit.id)
+      );
+      const filteredOutIds = originalRequested.filter(id => !activeToolkits.some(at => at.id === id));
+      if (filteredOutIds.length > 0) {
+        console.warn(`[Chat Handler] Client requested toolkits disabled by Clerk feature flag: ${filteredOutIds.join(', ')}. These will be ignored.`);
+      }
+    }
 
     const session = await auth();
 
@@ -153,9 +175,18 @@ export async function POST(request: Request) {
     await api.streams.createStreamId({ streamId, chatId: id });
 
     const toolkitTools = await Promise.all(
-      toolkits.map(async ({ id, parameters }) => {
+      activeToolkits.map(async ({ id, parameters }) => {
         const toolkit = getServerToolkit(id);
         const tools = await toolkit.tools(parameters);
+
+        if (!tools) {
+          // This toolkit was disabled server-side after filtering, which is unexpected
+          // if client-side and initial server-side filtering are correct.
+          // Log an error and skip this toolkit.
+          console.error(`[Chat Handler] Toolkit ${id} resolved to null tools despite being in activeToolkits. Skipping.`);
+          return {};
+        }
+
         return Object.keys(tools).reduce(
           (acc, toolName) => {
             const serverTool = tools[toolName as keyof typeof tools];
@@ -201,11 +232,17 @@ export async function POST(request: Request) {
 
     // Collect toolkit system prompts
     const toolkitSystemPrompts = await Promise.all(
-      toolkits.map(async ({ id }) => {
-        const toolkit = getServerToolkit(id);
-        return toolkit.systemPrompt;
+      activeToolkits.map(async ({ id, parameters }) => { // Use parameters if needed for check
+        const serverSideToolkit = getServerToolkit(id);
+        // Check if tools would be null for this toolkit before including its system prompt
+        const resolvedTools = await serverSideToolkit.tools(parameters);
+        if (!resolvedTools) {
+          return ""; // Do not include system prompt for disabled toolkits
+        }
+        return serverSideToolkit.systemPrompt;
       }),
-    );
+    ).then(prompts => prompts.filter(p => p !== "" && p !== undefined && p !== null));
+
 
     const tools = toolkitTools.reduce(
       (acc, toolkitTools) => {

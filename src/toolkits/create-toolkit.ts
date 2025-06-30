@@ -45,18 +45,21 @@ export const createServerToolkit = <
   toolConfigs: (
     params: z.infer<ZodObject<Parameters>>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ) => Promise<Record<ToolNames, ServerToolConfig<any, any>>>,
+  ) => Promise<Record<ToolNames, ServerToolConfig<any, any>> | null>,
 ): ServerToolkit<ToolNames, Parameters> => {
   return {
     systemPrompt,
     tools: async (params: z.infer<ZodObject<Parameters>>) => {
-      const tools = await toolConfigs(params);
+      const initializedToolsMap = await toolConfigs(params);
+      if (!initializedToolsMap) {
+        return null;
+      }
 
-      return Object.keys(tools).reduce(
+      return Object.keys(initializedToolsMap).reduce(
         (acc, toolName) => {
           const typedToolName = toolName as ToolNames;
           const baseToolConfig = toolkitConfig.tools[typedToolName];
-          const toolConfig = tools[typedToolName];
+          const toolConfig = initializedToolsMap[typedToolName];
           acc[typedToolName] = createServerTool(baseToolConfig, toolConfig);
           return acc;
         },

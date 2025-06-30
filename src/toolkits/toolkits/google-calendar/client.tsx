@@ -25,6 +25,8 @@ import { SiGooglecalendar } from "@icons-pack/react-simple-icons";
 import { ToolkitGroups } from "@/toolkits/types";
 import { Toolkits } from "../shared";
 import { env } from "@/env";
+import { useMemo } from "react";
+import { useUser } from "@clerk/nextjs"; // Added useUser
 
 const calendarScope = "https://www.googleapis.com/auth/calendar";
 
@@ -36,19 +38,13 @@ export const googleCalendarClientToolkit = createClientToolkit(
     icon: SiGooglecalendar,
     form: null,
     addToolkitWrapper: ({ children }) => {
-      const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED === "true";
+      const useClerkAccounts = useMemo(() => env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED, []);
 
-      const { data: account, isLoading: isLoadingAccount } =
-        api.accounts.getAccountByProvider.useQuery("google", {
-          enabled: !useClerkAccounts, // Only run if not using Clerk accounts
-        });
+      // Common: Check for feature access first
+      const { data: hasFeatureAccess, isLoading: isLoadingFeatureAccess } =
+        api.features.hasFeature.useQuery({ feature: "google-calendar" });
 
-      const { data: hasAccess, isLoading: isLoadingAccess } =
-        api.features.hasFeature.useQuery({
-          feature: "google-calendar",
-        });
-
-      if (isLoadingAccount || isLoadingAccess) {
+      if (isLoadingFeatureAccess) {
         return (
           <Button
             variant="outline"
@@ -61,7 +57,7 @@ export const googleCalendarClientToolkit = createClientToolkit(
         );
       }
 
-      if (!hasAccess) {
+      if (!hasFeatureAccess) {
         return (
           <TooltipProvider>
             <Tooltip>
@@ -83,6 +79,77 @@ export const googleCalendarClientToolkit = createClientToolkit(
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+        );
+      }
+
+      // Feature access is granted, now handle Clerk vs Legacy
+      if (useClerkAccounts) {
+        const { user, isLoaded: isUserLoaded } = useUser();
+
+        if (!isUserLoaded) {
+          return ( // Clerk User loading
+            <Button variant="outline" size="sm" disabled className="bg-transparent">
+              <Loader2 className="size-4 animate-spin" />
+            </Button>
+          );
+        }
+
+        const googleAccount = user?.externalAccounts?.find(
+          (acc) => acc.provider === "oauth_google"
+        );
+
+        if (!googleAccount) {
+          return (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // TODO: Link to Clerk's User Profile to connect Google
+                // or use Clerk SDK to initiate connection if available.
+                // For now, a toast message directing to user profile.
+                toast.info("Connect Google Calendar via your user profile.");
+                // Consider: window.open('/user-profile#connected-accounts', '_blank');
+              }}
+              className="bg-transparent"
+            >
+              Connect Google Calendar
+            </Button>
+          );
+        }
+
+        // externalAccount.approvedScopes is a space-separated string.
+        const currentScopes = googleAccount.approvedScopes ?? "";
+        const hasCalendarScopeAccess = currentScopes.split(' ').includes(calendarScope);
+
+        if (!hasCalendarScopeAccess) {
+          return (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // TODO: Link to Clerk's User Profile to re-authenticate/grant scopes
+                // or use Clerk SDK to initiate re-auth with additional scopes.
+                toast.info("Grant Google Calendar access with required scopes via your user profile.");
+              }}
+              className="bg-transparent"
+            >
+              Grant Calendar Access
+            </Button>
+          );
+        }
+
+        return children; // Clerk user has Google connection with calendar scope
+      }
+
+      // Legacy path (useClerkAccounts is false and hasFeatureAccess is true)
+      const { data: account, isLoading: isLoadingAccount } =
+        api.accounts.getAccountByProvider.useQuery("google"); // Query runs as useClerkAccounts is false
+
+      if (isLoadingAccount) {
+        return (
+          <Button variant="outline" size="sm" disabled className="bg-transparent">
+            <Loader2 className="size-4 animate-spin" />
+          </Button>
         );
       }
 
