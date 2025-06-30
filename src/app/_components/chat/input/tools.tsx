@@ -48,8 +48,7 @@ export const ToolsSelect = () => {
     ) {
       setIsOpen(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayableToolkitIds]); // Added displayableToolkitIds to dependency array
+  }, [isOpen, displayableToolkitIds, searchParams]); // Made dependencies exhaustive
 
   const { mutate: updateWorkbench, isPending } =
     api.workbenches.updateWorkbench.useMutation({

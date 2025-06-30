@@ -68,18 +68,19 @@ const PureMultimodalInput: React.FC<Props> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      adjustHeight();
-    }
-  }, [adjustHeight]); // Added adjustHeight to dependency array
-
+  // Moved adjustHeight definition before its use in useEffect hooks
   const adjustHeight = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`;
     }
   }, []); // textareaRef is stable
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      adjustHeight();
+    }
+  }, [adjustHeight]);
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     "input",
