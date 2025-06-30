@@ -13,7 +13,7 @@ import { createResumableStreamContext } from "resumable-stream";
 
 import { differenceInSeconds } from "date-fns";
 
-import { auth } from "@/server/auth";
+import { auth } from "@clerk/nextjs/server"; // Changed to Clerk's auth
 import { api } from "@/trpc/server";
 
 import { postRequestBodySchema, type PostRequestBody } from "./schema";
@@ -103,9 +103,9 @@ export async function POST(request: Request) {
       }
     }
 
-    const session = await auth();
+    const authData = await auth(); // Use authData for Clerk
 
-    if (!session?.user) {
+    if (!authData.userId) { // Check Clerk's userId
       return new ChatSDKError("unauthorized:chat").toResponse();
     }
 
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
       // Create chat with temporary title immediately
       await api.chats.createChat({
         id,
-        userId: session.user.id,
+        userId: authData.userId, // Use Clerk's userId
         title: "New Chat", // Temporary title
         visibility: selectedVisibilityType,
         workbenchId,
@@ -143,7 +143,7 @@ export async function POST(request: Request) {
           console.error("Failed to generate chat title:", error);
         });
     } else {
-      if (chat.userId !== session.user.id) {
+      if (chat.userId !== authData.userId) { // Use Clerk's userId
         return new ChatSDKError("forbidden:chat").toResponse();
       }
     }
@@ -299,7 +299,7 @@ export async function POST(request: Request) {
 
               // Send modelId as message annotation
 
-              if (session.user?.id) {
+              if (authData.userId) { // Use Clerk's userId
                 try {
                   const assistantId = getTrailingMessageId({
                     messages: response.messages.filter(
@@ -424,9 +424,9 @@ export async function GET(request: Request) {
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
-  const session = await auth();
+  const authData = await auth(); // Use Clerk's auth
 
-  if (!session?.user) {
+  if (!authData.userId) { // Check Clerk's userId
     return new ChatSDKError("unauthorized:chat").toResponse();
   }
 
@@ -448,7 +448,7 @@ export async function GET(request: Request) {
     return new ChatSDKError("not_found:chat").toResponse();
   }
 
-  if (chat.visibility === "private" && chat.userId !== session.user.id) {
+  if (chat.visibility === "private" && chat.userId !== authData.userId) { // Use Clerk's userId
     return new ChatSDKError("forbidden:chat").toResponse();
   }
 

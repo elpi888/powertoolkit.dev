@@ -1,5 +1,5 @@
 import { redirect, notFound } from "next/navigation";
-import { auth } from "@/server/auth";
+import { auth } from "@clerk/nextjs/server"; // Changed to Clerk's auth
 import { createCaller } from "@/server/api/root";
 import { createTRPCContext } from "@/server/api/trpc";
 import { headers } from "next/headers";
@@ -7,10 +7,10 @@ import { AdminPanel } from "./_components/admin-panel";
 
 export default async function AdminPage() {
   // Check authentication
-  const session = await auth();
+  const authData = await auth(); // Use Clerk's auth
 
-  if (!session) {
-    redirect("/login?redirect=/admin");
+  if (!authData.userId) { // Check Clerk's userId
+    redirect("/login?redirect=/admin"); // Or Clerk's sign-in URL
   }
 
   // Create TRPC context and caller for server-side calls

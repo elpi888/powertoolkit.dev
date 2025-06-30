@@ -1,4 +1,4 @@
-import { auth } from "@/server/auth";
+import { auth } from "@clerk/nextjs/server"; // Changed to Clerk's auth
 
 import { redirect } from "next/navigation";
 
@@ -14,10 +14,10 @@ const AccountPage = async ({
 }) => {
   const { tab } = await searchParams;
 
-  const session = await auth();
+  const authData = await auth(); // Use Clerk's auth
 
-  if (!session) {
-    redirect("/login?redirect=/account");
+  if (!authData.userId) { // Check Clerk's userId
+    redirect("/login?redirect=/account"); // Or Clerk's sign-in URL
   }
 
   const user = await api.users.getCurrentUser();

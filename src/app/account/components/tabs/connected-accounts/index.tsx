@@ -1,9 +1,9 @@
-import { AuthProviderIcon } from "@/app/_components/navbar/account-button/provider-icon";
+// import { AuthProviderIcon } from "@/app/_components/navbar/account-button"; // Removed usage
 import { Badge } from "@/components/ui/badge";
 import { HStack } from "@/components/ui/stack";
-import { providers } from "@/server/auth/providers";
+// import { providers } from "@/server/auth/providers"; // Removed
 import { api } from "@/trpc/server";
-import { ConnectButton, DisconnectButton } from "./connect-disconnect";
+import { DisconnectButton } from "./connect-disconnect"; // ConnectButton removed
 import { env } from "@/env";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -24,37 +24,48 @@ export const ConnectedAccounts = async () => {
     );
   }
 
-  const accounts = await api.accounts.getAccounts({
-    limit: 100,
-  });
+  // Legacy path (useClerkAccounts is false)
+  const accountsData = await api.accounts.getAccounts({ limit: 100 });
+  const legacyAccounts = accountsData?.items ?? [];
+
+  if (legacyAccounts.length === 0) {
+    return (
+      <div className="flex flex-col gap-2">
+        <p className="text-muted-foreground">No legacy accounts connected.</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          You can manage new connections through your user profile.
+        </p>
+        <Link href="/user-profile#connected-accounts" target="_blank" rel="noopener noreferrer" className="mt-1">
+          <Button variant="outline" size="sm">Manage Connections in Profile</Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">
-      {providers.map((provider) => {
-        const account = accounts?.items.find(
-          (account) => account.provider === provider.id,
-        );
-
-        return (
-          <HStack
-            key={provider.id}
-            className="w-full justify-between rounded-md border px-4 py-2"
-          >
-            <HStack className="gap-4">
-              <AuthProviderIcon provider={provider.name} />
-              <HStack className="gap-2">
-                <h2 className="font-medium">{provider.name}</h2>
-                {account && <Badge variant="success">Connected</Badge>}
-              </HStack>
+      <p className="text-sm text-muted-foreground mb-2">
+        The following are previously connected accounts. Please manage all connections via your user profile going forward.
+      </p>
+      {legacyAccounts.map((account) => (
+        <HStack
+          key={account.id}
+          className="w-full justify-between rounded-md border px-4 py-2"
+        >
+          <HStack className="gap-4">
+             {/* <AuthProviderIcon provider={account.provider} /> Usage Removed */}
+            <HStack className="gap-2">
+              {/* Capitalize first letter for display */}
+              <h2 className="font-medium">{account.provider.charAt(0).toUpperCase() + account.provider.slice(1)}</h2>
+              <Badge variant="outline">Legacy Connection</Badge>
             </HStack>
-            {account ? (
-              <DisconnectButton accountId={account.id} />
-            ) : (
-              <ConnectButton provider={provider.id} />
-            )}
           </HStack>
-        );
-      })}
+          <DisconnectButton accountId={account.id} />
+        </HStack>
+      ))}
+       <Link href="/user-profile#connected-accounts" target="_blank" rel="noopener noreferrer" className="mt-2">
+          <Button variant="outline" size="sm">Manage All Connections in Profile</Button>
+        </Link>
     </div>
   );
 };
