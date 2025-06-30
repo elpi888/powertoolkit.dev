@@ -124,7 +124,7 @@ export async function POST(request: Request) {
       // Create chat with temporary title immediately
       await api.chats.createChat({
         id,
-        userId: authData.userId, // Use Clerk's userId
+        // userId is set by the procedure using ctx.auth.userId
         title: "New Chat", // Temporary title
         visibility: selectedVisibilityType,
         workbenchId,
