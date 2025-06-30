@@ -1,5 +1,5 @@
 import { Webhook } from "svix";
-import { headers } from "next/headers";
+// import { headers } from "next/headers"; // Replaced with req.headers
 import { NextResponse } from "next/server";
 import type { WebhookEvent, UserJSON } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
@@ -22,7 +22,7 @@ async function handler(req: Request) {
     });
   }
 
-  const headerPayload = headers();
+  const headerPayload = req.headers; // Use req.headers instead of next/headers
   const svix_id = headerPayload.get("svix-id");
   const svix_timestamp = headerPayload.get("svix-timestamp");
   const svix_signature = headerPayload.get("svix-signature");
