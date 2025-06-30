@@ -15,16 +15,18 @@ import {
 } from "@/components/ui/tooltip";
 import { Loader2, Save, Wrench } from "lucide-react";
 import { useChatContext } from "@/app/_contexts/chat-context";
-import { useEffect, useState, useMemo } from "react"; // Added useMemo
+import { useEffect, useState, useMemo } from "react";
 import { ToolkitList } from "@/components/toolkit/toolkit-list";
 import { useRouter, useSearchParams } from "next/navigation";
-import { env } from "@/env"; // Added env
-import { Toolkits as ToolkitsEnum } from "@/toolkits/toolkits/shared"; // For enum access
+// import { env } from "@/env"; // Moved to hook
+// import { Toolkits as ToolkitsEnum } from "@/toolkits/toolkits/shared"; // Moved to hook
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
 import { ToolkitIcons } from "@/components/toolkit/toolkit-icons";
-import { clientToolkits } from "@/toolkits/toolkits/client";
+// import { clientToolkits } from "@/toolkits/toolkits/client"; // No longer directly needed
 import { LanguageModelCapability } from "@/ai/types";
+import { useFilteredToolkits } from "@/app/_hooks/useFilteredToolkits";
+
 
 export const ToolsSelect = () => {
   const { toolkits, addToolkit, removeToolkit, workbench, selectedChatModel } =
@@ -32,21 +34,8 @@ export const ToolsSelect = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const useClerkAccounts = useMemo(() => env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED, []);
-  const legacyToolkitsToHideWhenClerkActive: ToolkitsEnum[] = useMemo(() => [
-    ToolkitsEnum.Github,
-    ToolkitsEnum.GoogleCalendar,
-    ToolkitsEnum.Notion,
-    ToolkitsEnum.GoogleDrive,
-  ], []);
-
-  const displayableToolkitIds = useMemo(() => {
-    const allIds = Object.keys(clientToolkits) as ToolkitsEnum[];
-    if (useClerkAccounts) {
-      return allIds.filter(id => !legacyToolkitsToHideWhenClerkActive.includes(id));
-    }
-    return allIds;
-  }, [useClerkAccounts, legacyToolkitsToHideWhenClerkActive]);
+  const { displayableToolkitIds } = useFilteredToolkits();
+  // isClerkAccountsEnabled also available if needed
 
   const [isOpen, setIsOpen] = useState(
     displayableToolkitIds.some((toolkitId) => searchParams.get(toolkitId)),

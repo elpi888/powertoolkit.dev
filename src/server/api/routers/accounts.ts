@@ -63,21 +63,29 @@ export const accountsRouter = createTRPCRouter({
       if (useClerkForAccounts) {
         if (!ctx.auth.userId) {
           // This case should ideally not be reached in a protectedProcedure
-          console.error("hasProviderAccount: ctx.auth.userId is missing in a protected procedure.");
+          // TODO: Replace with proper logging service
+          // console.error("hasProviderAccount: ctx.auth.userId is missing in a protected procedure.");
           return false;
         }
         try {
           const user = await clerkClient.users.getUser(ctx.auth.userId);
-          // Map input to potential Clerk provider string (e.g., "github" -> "oauth_github")
-          // This mapping might need to be more robust or configurable if provider names differ significantly.
-          const clerkOAuthProviderId = `oauth_${input.toLowerCase()}`;
+
+          const providerMapping: Record<string, string> = {
+            github: 'oauth_github',
+            google: 'oauth_google',
+            notion: 'oauth_notion',
+            // Add other provider mappings as needed
+          };
+          const lowerInput = input.toLowerCase();
+          const clerkOAuthProviderId = providerMapping[lowerInput] || `oauth_${lowerInput}`;
 
           const hasConnection = user.externalAccounts.some(
             (extAccount) => extAccount.provider === clerkOAuthProviderId
           );
           return hasConnection;
         } catch (error) {
-          console.error(`[Clerk] Error fetching user ${ctx.auth.userId} or their external accounts:`, error);
+          // TODO: Replace with proper logging service
+          // console.error(`[Clerk] Error fetching user ${ctx.auth.userId} or their external accounts:`, error);
           return false; // Return false on error to indicate account not found or inaccessible
         }
       } else {

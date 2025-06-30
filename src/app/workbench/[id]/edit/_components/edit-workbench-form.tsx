@@ -23,12 +23,14 @@ import {
 } from "@/components/ui/dialog";
 import { Anvil, Plus } from "lucide-react";
 import { ToolkitIcons } from "@/components/toolkit/toolkit-icons";
-import { clientToolkits } from "@/toolkits/toolkits/client";
-import { getClientToolkit } from "@/toolkits/toolkits/client";
+// import { clientToolkits } from "@/toolkits/toolkits/client"; // No longer directly needed
+import { getClientToolkit } from "@/toolkits/toolkits/client"; // Still needed for initial selection
 import type { Workbench } from "@prisma/client";
-import { useMemo } from "react"; // Added useMemo
-import { env } from "@/env"; // Added env
-import { Toolkits as ToolkitsEnum } from "@/toolkits/toolkits/shared"; // For enum access
+// import { useMemo } from "react"; // Moved to hook
+// import { env } from "@/env"; // Moved to hook
+import { Toolkits as ToolkitsEnum } from "@/toolkits/toolkits/shared"; // Still needed for enum access
+import { useFilteredToolkits } from "@/app/_hooks/useFilteredToolkits";
+
 
 interface EditWorkbenchFormProps {
   workbench: Workbench;
@@ -41,7 +43,7 @@ export function EditWorkbenchForm({ workbench }: EditWorkbenchFormProps) {
   const [selectedToolkits, setSelectedToolkits] = useState<SelectedToolkit[]>(
     workbench.toolkitIds.map((id) => {
       const typedId = id as Toolkits;
-      const toolkit = getClientToolkit(typedId);
+      const toolkit = getClientToolkit(typedId); // getClientToolkit still uses the full clientToolkits list
       return {
         id: typedId,
         toolkit,
@@ -50,21 +52,8 @@ export function EditWorkbenchForm({ workbench }: EditWorkbenchFormProps) {
     }),
   );
 
-  const useClerkAccounts = useMemo(() => env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED, []);
-  const legacyToolkitsToHideWhenClerkActive: ToolkitsEnum[] = useMemo(() => [
-    ToolkitsEnum.Github,
-    ToolkitsEnum.GoogleCalendar,
-    ToolkitsEnum.Notion,
-    ToolkitsEnum.GoogleDrive,
-  ], []);
-
-  const displayableToolkitIds = useMemo(() => {
-    const allIds = Object.keys(clientToolkits) as ToolkitsEnum[];
-    if (useClerkAccounts) {
-      return allIds.filter(id => !legacyToolkitsToHideWhenClerkActive.includes(id));
-    }
-    return allIds;
-  }, [useClerkAccounts, legacyToolkitsToHideWhenClerkActive]);
+  const { displayableToolkitIds } = useFilteredToolkits();
+  // isClerkAccountsEnabled is also available
 
   const utils = api.useUtils();
   const updateMutation = api.workbenches.updateWorkbench.useMutation({
