@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 import { put } from "@vercel/blob";
 
-import { auth } from "@/server/auth";
+import { auth } from "@clerk/nextjs/server"; // Changed to Clerk's auth
 import { api } from "@/trpc/server";
 import { FILE_MAX_SIZE } from "@/lib/constants";
 
@@ -26,9 +26,9 @@ const FileSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const session = await auth();
+  const authData = await auth(); // Use Clerk's auth
 
-  if (!session) {
+  if (!authData.userId) { // Check Clerk's userId
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
 
     try {
       const data = await put(
-        `${session.user.id}/${crypto.randomUUID()}`,
+        `${authData.userId}/${crypto.randomUUID()}`, // Use Clerk's userId
         fileBuffer,
         {
           access: "public",

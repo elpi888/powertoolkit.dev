@@ -1,12 +1,12 @@
-import { auth } from "@/server/auth";
+import { auth } from "@clerk/nextjs/server"; // Changed to Clerk's auth
 import { redirect } from "next/navigation";
 import { NewWorkbenchForm } from "./_components";
 
 export default async function NewWorkbenchPage() {
-  const session = await auth();
+  const authData = await auth(); // Use Clerk's auth
 
-  if (!session) {
-    redirect("/");
+  if (!authData.userId) { // Check Clerk's userId
+    redirect("/"); // Or Clerk's sign-in URL with redirect back
   }
 
   return <NewWorkbenchForm />;

@@ -1,7 +1,7 @@
 import { api } from "@/trpc/server";
 import { WorkbenchHeader } from "./_components/header";
 import { notFound, redirect } from "next/navigation";
-import { auth } from "@/server/auth";
+import { auth } from "@clerk/nextjs/server"; // Changed to Clerk's auth
 
 export default async function WorkbenchLayout({
   children,
@@ -12,10 +12,10 @@ export default async function WorkbenchLayout({
 }) {
   const { id } = await params;
 
-  const session = await auth();
+  const authData = await auth(); // Use Clerk's auth
 
-  if (!session) {
-    redirect(`/login?redirect=/workbench/${id}`);
+  if (!authData.userId) { // Check Clerk's userId
+    redirect(`/login?redirect=/workbench/${id}`); // Or Clerk's sign-in URL
   }
 
   const workbench = await api.workbenches.getWorkbench(id);
