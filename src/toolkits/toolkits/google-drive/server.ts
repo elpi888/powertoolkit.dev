@@ -5,8 +5,10 @@ import {
   googleDriveReadFileToolConfigServer,
 } from "./tools/server";
 import { GoogleDriveTools } from "./tools";
-import { api } from "@/trpc/server";
-import { env } from "@/env";
+// import { api } from "@/trpc/server"; // No longer needed
+// import { env } from "@/env"; // No longer needed
+import { clerkClient, type OauthAccessToken } from "@clerk/nextjs/server"; // Import clerkClient and OauthAccessToken
+import { TRPCError } from "@trpc/server"; // Import TRPCError
 
 export const googleDriveToolkitServer = createServerToolkit(
   baseGoogleDriveToolkitConfig,
@@ -26,32 +28,47 @@ export const googleDriveToolkitServer = createServerToolkit(
 - When reading files, be aware of file format limitations and supported document types
 - Combine search results from multiple queries to get comprehensive document coverage
 - Use folder-based searches when documents are organized in specific directory structures`,
-  async () => {
-    const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
-
-    if (useClerkAccounts) {
-      // If Clerk accounts are active, the old way of getting accounts is disabled.
-      // This toolkit will effectively be disabled until migrated to Clerk.
-      console.warn("Google Drive Server Toolkit: Attempted to initialize with legacy accounts while Clerk is active. Toolkit will be disabled.");
-      return null;
+  async (params, userId) => { // Added userId
+    if (!userId) {
+      console.error("Google Drive Server Toolkit: userId not provided.");
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "User authentication required for Google Drive toolkit." });
     }
 
-    const account = await api.accounts.getAccountByProvider("google");
+    const clerkProvider = "oauth_google"; // Standard Clerk provider ID for Google
+    const requiredScope = "https://www.googleapis.com/auth/drive.readonly";
 
-    if (!account?.access_token) {
-      throw new Error("No Google account found or access token missing (legacy accounts).");
+    let accessToken: string | null = null;
+    try {
+      const client = await clerkClient();
+      const tokenResponse = await client.users.getUserOauthAccessToken(userId, clerkProvider);
+
+      const googleToken = tokenResponse.data.find((token: OauthAccessToken) =>
+        token.provider === clerkProvider &&
+        token.scopes?.includes(requiredScope)
+      );
+
+      if (googleToken?.token) {
+        accessToken = googleToken.token;
+      } else {
+        console.warn(`Google Drive Server Toolkit: No OAuth token found for user ${userId} with provider ${clerkProvider} and scope ${requiredScope}.`);
+        throw new TRPCError({ code: "NOT_FOUND", message: `Google Drive access denied. Please ensure the app has '${requiredScope}' permission.` });
+      }
+    } catch (error) {
+      console.error(`Google Drive Server Toolkit: Error fetching OAuth token for user ${userId}, provider ${clerkProvider}:`, error);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to retrieve Google Drive OAuth token.", cause: error instanceof Error ? error : undefined });
     }
 
-    if (!account.scope?.includes("drive.readonly")) {
-      throw new Error("Google account does not have drive.readonly scope (legacy accounts).");
+    if (!accessToken) {
+      // Should have been caught above
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Google Drive access token could not be obtained." });
     }
 
     return {
       [GoogleDriveTools.SearchFiles]: googleDriveSearchFilesToolConfigServer(
-        account.access_token,
+        accessToken,
       ),
       [GoogleDriveTools.ReadFile]: googleDriveReadFileToolConfigServer(
-        account.access_token,
+        accessToken,
       ),
     };
   },

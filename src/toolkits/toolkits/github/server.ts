@@ -7,9 +7,11 @@ import {
   githubRepoInfoToolConfigServer,
 } from "./tools/server";
 import { GithubTools } from "./tools";
-import { api } from "@/trpc/server";
+// import { api } from "@/trpc/server"; // No longer needed
 import { Octokit } from "octokit";
-import { env } from "@/env";
+// import { env } from "@/env"; // No longer needed for NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED check
+import { clerkClient } from "@clerk/nextjs/server"; // Import clerkClient
+import { TRPCError } from "@trpc/server"; // Import TRPCError
 
 export const githubToolkitServer = createServerToolkit(
   baseGithubToolkitConfig,
@@ -31,29 +33,43 @@ export const githubToolkitServer = createServerToolkit(
 - Leverage GitHub's advanced search syntax (language:python, stars:>100, etc.)
 - When analyzing projects, start with repository overview then drill down into specific code patterns
 - For technical research, search code first to find implementations, then explore the containing repositories`,
-  async () => {
-    const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
-
-    if (useClerkAccounts) {
-      // If Clerk accounts are active, the old way of getting accounts is disabled.
-      // This toolkit will effectively be disabled until migrated to Clerk.
-      console.warn("GitHub Server Toolkit: Attempted to initialize with legacy accounts while Clerk is active. Toolkit will be disabled.");
-      return null;
+  async (params, userId) => { // Added userId, params might be unused for GitHub
+    if (!userId) {
+      // This should ideally be handled by the caller, ensuring userId is always provided.
+      // Or, if this toolkit can operate without a user-specific token (e.g. app token), handle that.
+      // For now, assume user-specific token is required.
+      console.error("GitHub Server Toolkit: userId not provided for initialization.");
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "User authentication required for GitHub toolkit." });
     }
 
-    const account = await api.accounts.getAccountByProvider("github");
+    // Determine the Clerk provider ID for GitHub
+    const clerkProvider = "oauth_github"; // Direct usage, or use getClerkProviderId from accounts.ts if more complex mapping needed
 
-    if (!account) {
-      throw new Error("No GitHub account found (legacy accounts).");
-    }
-    // Assuming access_token is mandatory if account is found
-    if (!account.access_token) {
-      throw new Error("No GitHub access token found (legacy accounts).");
+    let accessToken: string | null = null;
+    try {
+      const client = await clerkClient(); // Ensure clerkClient is imported
+      const tokenResponse = await client.users.getUserOauthAccessToken(userId, clerkProvider);
+      // tokenResponse.data is an array of OauthAccessToken objects.
+      if (tokenResponse.data.length > 0 && tokenResponse.data[0]?.token) {
+        accessToken = tokenResponse.data[0].token;
+      } else {
+        console.warn(`GitHub Server Toolkit: No OAuth token found for user ${userId} and provider ${clerkProvider}.`);
+        // Depending on desired behavior, could throw, or return null to disable tools.
+        // For now, let's throw, as the toolkit likely needs it.
+        throw new TRPCError({ code: "NOT_FOUND", message: "GitHub OAuth token not found or access denied." });
+      }
+    } catch (error) {
+      console.error(`GitHub Server Toolkit: Error fetching OAuth token for user ${userId}, provider ${clerkProvider}:`, error);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to retrieve GitHub OAuth token.", cause: error instanceof Error ? error : undefined });
     }
 
+    if (!accessToken) {
+      // Should have been caught by the throw above, but as a safeguard.
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "GitHub access token could not be obtained." });
+    }
 
     const octokit = new Octokit({
-      auth: account.access_token,
+      auth: accessToken,
     });
 
     return {

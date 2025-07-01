@@ -27,19 +27,8 @@ export async function AppSidebar({
   // const [session] = await Promise.all([auth()]); // Old NextAuth
   const authData = await auth(); // Clerk's auth
 
-  // If user is not authenticated, don't render the sidebar content that requires auth
-  // The NavUser component itself handles its signed-in/signed-out state via useUser hook.
-  // This check is more about whether to prefetch data or render parts of the sidebar
-  // that are only relevant for authenticated users.
+  // Don't render sidebar for unauthenticated users
   if (!authData.userId) {
-    // Depending on desired UX, could return null or a minimal sidebar
-    // For now, let's assume if no userId, some parts won't fetch.
-    // The NavUser component will show its signed-out state.
-    // If the entire sidebar should be hidden, return null.
-    // Let's return null for now if the intent is that this sidebar is for auth'd users.
-    // However, NavUser itself uses useUser, so it can show a login button.
-    // The original logic was `if (!session) return null;`
-    // So, keeping that spirit:
     return null;
   }
 

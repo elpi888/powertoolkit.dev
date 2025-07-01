@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 // import { signIn } from "next-auth/react"; // Removed: Clerk handles connections
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner"; // For placeholder action
+// import { toast } from "sonner"; // No longer used
 import {
   Tooltip,
   TooltipContent,
@@ -25,7 +25,7 @@ import { SiGooglecalendar } from "@icons-pack/react-simple-icons";
 import { ToolkitGroups } from "@/toolkits/types";
 import { Toolkits } from "../shared";
 import { env } from "@/env";
-import { useMemo } from "react";
+// import { useMemo } from "react"; // No longer used
 import { useUser } from "@clerk/nextjs"; // Added useUser
 
 const calendarScope = "https://www.googleapis.com/auth/calendar";
@@ -38,7 +38,7 @@ export const googleCalendarClientToolkit = createClientToolkit(
     icon: SiGooglecalendar,
     form: null,
     addToolkitWrapper: ({ children }) => {
-      const useClerkAccounts = useMemo(() => env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED, []);
+      const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
 
       // Common: Check for feature access first
       const { data: hasFeatureAccess, isLoading: isLoadingFeatureAccess } =
@@ -95,26 +95,12 @@ export const googleCalendarClientToolkit = createClientToolkit(
         }
 
         const googleAccount = user?.externalAccounts?.find(
-          (acc) => acc.provider === "oauth_google"
+          (acc) => (acc.provider as string) === "oauth_google"
         );
 
         if (!googleAccount) {
-          return (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                // TODO: Link to Clerk's User Profile to connect Google
-                // or use Clerk SDK to initiate connection if available.
-                // For now, a toast message directing to user profile.
-                toast.info("Connect Google Calendar via your user profile.");
-                // Consider: window.open('/user-profile#connected-accounts', '_blank');
-              }}
-              className="bg-transparent"
-            >
-              Connect Google Calendar
-            </Button>
-          );
+          // Connect Google Calendar via Clerk user profile
+          return null;
         }
 
         // externalAccount.approvedScopes is a space-separated string.
@@ -122,78 +108,19 @@ export const googleCalendarClientToolkit = createClientToolkit(
         const hasCalendarScopeAccess = currentScopes.split(' ').includes(calendarScope);
 
         if (!hasCalendarScopeAccess) {
-          return (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                // TODO: Link to Clerk's User Profile to re-authenticate/grant scopes
-                // or use Clerk SDK to initiate re-auth with additional scopes.
-                toast.info("Grant Google Calendar access with required scopes via your user profile.");
-              }}
-              className="bg-transparent"
-            >
-              Grant Calendar Access
-            </Button>
-          );
+          // Grant Google Calendar access with required scopes via Clerk user profile
+          return null;
         }
 
         return children; // Clerk user has Google connection with calendar scope
       }
-
-      // Legacy path (useClerkAccounts is false and hasFeatureAccess is true)
-      const { data: account, isLoading: isLoadingAccount } =
-        api.accounts.getAccountByProvider.useQuery("google"); // Query runs as useClerkAccounts is false
-
-      if (isLoadingAccount) {
-        return (
-          <Button variant="outline" size="sm" disabled className="bg-transparent">
-            <Loader2 className="size-4 animate-spin" />
-          </Button>
-        );
-      }
-
-      if (!account) {
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              // TODO: Refactor for Clerk.
-              // This should ideally link to Clerk's User Profile page where connections can be managed,
-              // or use a Clerk-provided method to initiate the Google connection with correct scopes.
-              // This legacy path implies Clerk is not yet the primary method for this user,
-              // but we guide them towards the new central place for connections.
-              toast.info("Please manage your Google Calendar connection via your user profile.");
-              window.open('/user-profile#connected-accounts', '_blank');
-            }}
-            className="bg-transparent"
-          >
-            Manage Connection
-          </Button>
-        );
-      }
-
-      if (!account?.scope?.includes(calendarScope)) {
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              // TODO: Refactor for Clerk.
-              // This should ideally link to Clerk's User Profile page where connections can be managed,
-              // This legacy path implies Clerk is not yet the primary method for this user,
-              // but we guide them towards the new central place for connections and permissions.
-              toast.info("Please update Google Calendar permissions via your user profile.");
-              window.open('/user-profile#connected-accounts', '_blank');
-            }}
-            className="bg-transparent" // Added className for consistency
-          >
-            Update Permissions
-          </Button>
-        );
-      }
-
+      // Legacy path removed. Assuming env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED is true.
+      // If it were false, this component would not render the children if feature access was granted.
+      // This path should ideally not be reached if Clerk is the sole auth method and feature flag is true.
+      // The api.features.hasFeature check is outside the Clerk/legacy conditional, so it still applies.
+      // If useClerkAccounts is false, and hasFeatureAccess is true, it will fall through here.
+      // To be fully robust for Clerk-only, the outer logic should ensure this state isn't problematic.
+      // For now, returning children to match behaviour of other cleaned up toolkits.
       return children;
     },
     type: ToolkitGroups.DataSource,

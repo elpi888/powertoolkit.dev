@@ -177,7 +177,7 @@ export async function POST(request: Request) {
     const toolkitTools = await Promise.all(
       activeToolkits.map(async ({ id, parameters }) => {
         const toolkit = getServerToolkit(id);
-        const tools = await toolkit.tools(parameters);
+        const tools = await toolkit.tools(parameters, authData.userId!);
 
         if (!tools) {
           // This toolkit was disabled server-side after filtering, which is unexpected
@@ -235,7 +235,7 @@ export async function POST(request: Request) {
       activeToolkits.map(async ({ id, parameters }) => { // Use parameters if needed for check
         const serverSideToolkit = getServerToolkit(id);
         // Check if tools would be null for this toolkit before including its system prompt
-        const resolvedTools = await serverSideToolkit.tools(parameters);
+        const resolvedTools = await serverSideToolkit.tools(parameters, authData.userId!);
         if (!resolvedTools) {
           return ""; // Do not include system prompt for disabled toolkits
         }

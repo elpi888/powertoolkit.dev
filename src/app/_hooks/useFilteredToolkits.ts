@@ -11,7 +11,7 @@ const LEGACY_TOOLKITS_TO_HIDE_WHEN_CLERK_ACTIVE: ToolkitsEnum[] = [
 ];
 
 export function useFilteredToolkits() {
-  const isClerkAccountsEnabled = useMemo(() => env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED, []);
+  const isClerkAccountsEnabled = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
 
   const displayableToolkitIds = useMemo(() => {
     const allIds = Object.keys(clientToolkits) as ToolkitsEnum[];
@@ -23,7 +23,8 @@ export function useFilteredToolkits() {
 
   // Also provide the raw list of clientToolkits entries, filtered
   const availableToolkitsEntries = useMemo(() => {
-    return (Object.entries(clientToolkits) as [ToolkitsEnum, typeof clientToolkits[ToolkitsEnum]][]).filter(([id]) => {
+    const entries = Object.entries(clientToolkits) as Array<[ToolkitsEnum, typeof clientToolkits[ToolkitsEnum]]>;
+    return entries.filter(([id]) => {
       if (isClerkAccountsEnabled) {
         return !LEGACY_TOOLKITS_TO_HIDE_WHEN_CLERK_ACTIVE.includes(id);
       }

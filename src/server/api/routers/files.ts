@@ -52,7 +52,7 @@ export const filesRouter = createTRPCRouter({
     }),
 
   getFileCountByUserId: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
+    const userId = ctx.auth.userId;
 
     return ctx.db.file.count({
       where: {
