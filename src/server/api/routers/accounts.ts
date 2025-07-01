@@ -116,8 +116,11 @@ export const accountsRouter = createTRPCRouter({
       }
       try {
         const client = await clerkClient(); // Use await
-        // Using the UserAPI method which expects userId and externalAccountId
-        await client.users.deleteUserExternalAccount(ctx.auth.userId, input);
+        // Assuming DeleteUserExternalAccountParams is { userId: string, externalAccountId: string }
+        await client.users.deleteUserExternalAccount({
+          userId: ctx.auth.userId,
+          externalAccountId: input
+        });
         return { success: true, message: "Account disconnected successfully via Clerk." };
       } catch (error) {
         console.error(`[Clerk] Error deleting external account ${input} for user ${ctx.auth.userId}:`, error);
