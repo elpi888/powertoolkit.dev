@@ -29,7 +29,7 @@ export const accountsRouter = createTRPCRouter({
         return { items: [], hasMore: false, nextCursor: null };
       }
       try {
-        const client = await clerkClient();
+        const client = await clerkClient(); // Use await
         const user = await client.users.getUser(ctx.auth.userId);
         const mappedAccounts = user.externalAccounts.map((extAccount) => {
           const providerName = extAccount.provider.startsWith("oauth_")
@@ -59,7 +59,7 @@ export const accountsRouter = createTRPCRouter({
         return null;
       }
       try {
-        const client = await clerkClient();
+        const client = await clerkClient(); // Use await
         const user = await client.users.getUser(ctx.auth.userId);
         const clerkOAuthProviderId = getClerkProviderId(input);
         const externalAccount = user.externalAccounts.find(
@@ -92,7 +92,7 @@ export const accountsRouter = createTRPCRouter({
         return false;
       }
       try {
-        const client = await clerkClient();
+        const client = await clerkClient(); // Use await
         const user = await client.users.getUser(ctx.auth.userId);
         const clerkOAuthProviderId = getClerkProviderId(input);
         const hasConnection = user.externalAccounts.some(
@@ -115,7 +115,7 @@ export const accountsRouter = createTRPCRouter({
         });
       }
       try {
-        const client = await clerkClient();
+        const client = await clerkClient(); // Use await
         // Using the UserAPI method which expects userId and externalAccountId
         await client.users.deleteUserExternalAccount(ctx.auth.userId, input);
         return { success: true, message: "Account disconnected successfully via Clerk." };

@@ -47,7 +47,7 @@ export const githubToolkitServer = createServerToolkit(
 
     let accessToken: string | null = null;
     try {
-      const client = await clerkClient(); // Ensure clerkClient is imported
+      const client = await clerkClient(); // Revert to await
       const tokenResponse = await client.users.getUserOauthAccessToken(userId, clerkProvider);
       // tokenResponse.data is an array of OauthAccessToken objects.
       if (tokenResponse.data.length > 0 && tokenResponse.data[0]?.token) {

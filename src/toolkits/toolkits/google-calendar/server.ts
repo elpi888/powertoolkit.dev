@@ -44,7 +44,7 @@ export const googleCalendarToolkitServer = createServerToolkit(
 
     let accessToken: string | null = null;
     try {
-      const client = await clerkClient();
+      const client = await clerkClient(); // Revert to await
       const tokenResponse = await client.users.getUserOauthAccessToken(userId, clerkProvider);
       // TODO: Check tokenResponse.data for required scopes if necessary (e.g., calendarScope)
       // tokenResponse.data[0]?.scopes

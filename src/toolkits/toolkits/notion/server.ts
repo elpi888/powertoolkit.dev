@@ -62,7 +62,7 @@ If the user has memory enabled and they ask you to make content, check the memor
 
     let accessToken: string | null = null;
     try {
-      const client = await clerkClient();
+      const client = await clerkClient(); // Revert to await
       const tokenResponse = await client.users.getUserOauthAccessToken(userId, clerkProvider);
 
       if (tokenResponse.data.length > 0 && tokenResponse.data[0]?.token) {

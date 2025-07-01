@@ -39,7 +39,7 @@ export const googleDriveToolkitServer = createServerToolkit(
 
     let accessToken: string | null = null;
     try {
-      const client = await clerkClient();
+      const client = await clerkClient(); // Revert to await
       const tokenResponse = await client.users.getUserOauthAccessToken(userId, clerkProvider);
 
       const googleToken = tokenResponse.data.find((token: OauthAccessToken) =>
