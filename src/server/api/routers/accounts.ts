@@ -24,7 +24,7 @@ export const accountsRouter = createTRPCRouter({
         cursor: z.string().nullish(),
       }),
     )
-    .query(async ({ ctx }) => { // Removed 'input' from destructuring as it's not directly used here
+    .query(async ({ ctx }) => {
       if (!ctx.auth.userId) {
         return { items: [], hasMore: false, nextCursor: null };
       }
@@ -100,8 +100,6 @@ export const accountsRouter = createTRPCRouter({
         );
         return hasConnection;
       } catch (error) {
-        // It's often better to let errors propagate or return a specific error state.
-        // For hasProviderAccount, returning false on error might be acceptable.
         console.error(`[Clerk] Error checking for provider account ${input}:`, error);
         return false;
       }
@@ -111,7 +109,6 @@ export const accountsRouter = createTRPCRouter({
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth.userId) {
-        // This should ideally be caught by protectedProcedure, but as a safeguard or for non-TRPC contexts.
         throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "User not authenticated."
