@@ -3,6 +3,17 @@ import { z } from "zod";
 import { clerkClient } from "@clerk/nextjs/server";
 import { env } from "@/env";
 
+const getClerkProviderId = (provider: string): string => {
+  const providerMapping: Record<string, string> = {
+    github: 'oauth_github',
+    google: 'oauth_google',
+    notion: 'oauth_notion',
+    // Add other common mappings if known
+  };
+  const lowerProvider = provider.toLowerCase();
+  return providerMapping[lowerProvider] || `oauth_${lowerProvider}`; // Fallback for unmapped
+};
+
 export const accountsRouter = createTRPCRouter({
   getAccounts: protectedProcedure
     .input(
@@ -44,7 +55,7 @@ export const accountsRouter = createTRPCRouter({
         } catch (error) {
           console.error("[Clerk] Error fetching user's external accounts:", error);
           // TODO: Replace with proper logging service
-          return { items: [], hasMore: false, nextCursor: null, error: "Failed to fetch accounts from Clerk" };
+          return { items: [], hasMore: false, nextCursor: null }; // Removed error field
         }
       } else {
         // Legacy mode: Account table is removed.
@@ -80,13 +91,7 @@ export const accountsRouter = createTRPCRouter({
         try {
           const user = await clerkClient.users.getUser(ctx.auth.userId);
 
-          const providerMapping: Record<string, string> = {
-            github: 'oauth_github',
-            google: 'oauth_google',
-            notion: 'oauth_notion',
-          };
-          const lowerInput = input.toLowerCase();
-          const clerkOAuthProviderId = providerMapping[lowerInput] || `oauth_${lowerInput}`;
+          const clerkOAuthProviderId = getClerkProviderId(input);
 
           const externalAccount = user.externalAccounts.find(
             (acc) => acc.provider === clerkOAuthProviderId
@@ -135,14 +140,7 @@ export const accountsRouter = createTRPCRouter({
         try {
           const user = await clerkClient.users.getUser(ctx.auth.userId);
 
-          const providerMapping: Record<string, string> = {
-            github: 'oauth_github',
-            google: 'oauth_google',
-            notion: 'oauth_notion',
-            // Add other provider mappings as needed
-          };
-          const lowerInput = input.toLowerCase();
-          const clerkOAuthProviderId = providerMapping[lowerInput] || `oauth_${lowerInput}`;
+          const clerkOAuthProviderId = getClerkProviderId(input);
 
           const hasConnection = user.externalAccounts.some(
             (extAccount) => extAccount.provider === clerkOAuthProviderId
