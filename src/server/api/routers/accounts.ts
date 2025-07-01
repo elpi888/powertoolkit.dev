@@ -12,47 +12,52 @@ export const accountsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { limit, cursor } = input;
+      // const { limit, cursor } = input; // limit and cursor not used if not fetching
 
-      const items = await ctx.db.account.findMany({
-        where: {
-          userId: ctx.auth.userId, // Updated from ctx.session.user.id
-        },
-        take: limit + 1,
-        cursor: cursor ? { id: cursor } : undefined,
-      });
-
-      const nextCursor =
-        items.length > limit ? items[items.length - 1]?.id : undefined;
-      const accounts = items.slice(0, limit);
+      // The Account table from NextAuth has been removed.
+      // This procedure is now obsolete or needs full reimplementation with Clerk.
+      // For now, return empty to prevent build errors and runtime errors on legacy path.
+      // TODO: Refactor or remove this procedure. If needed, fetch connected accounts from Clerk.
+      if (env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED) {
+        // In Clerk mode, this should ideally fetch from Clerk's API if needed.
+        // For now, returning empty as this specific tRPC was for legacy DB accounts.
+        console.warn("getAccounts TRPC route called in Clerk mode - this is for legacy DB accounts and should be replaced/removed.");
+      } else {
+        // In legacy mode, the table is gone.
+        console.warn("getAccounts TRPC route called in legacy mode, but Account table is removed.");
+      }
 
       return {
-        items: accounts,
-        hasMore: items.length > limit,
-        nextCursor,
+        items: [],
+        hasMore: false,
+        nextCursor: null,
       };
     }),
 
   getAccount: protectedProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {
-      return ctx.db.account.findFirst({
-        where: {
-          id: input,
-          userId: ctx.auth.userId, // Updated from ctx.session.user.id
-        },
-      });
+      // The Account table from NextAuth has been removed.
+      // TODO: Refactor or remove this procedure.
+      if (env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED) {
+        console.warn("getAccount TRPC route called in Clerk mode - this is for legacy DB accounts and should be replaced/removed.");
+      } else {
+        console.warn("getAccount TRPC route called in legacy mode, but Account table is removed.");
+      }
+      return null; // Or throw an error indicating data source is unavailable
     }),
 
   getAccountByProvider: protectedProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {
-      return ctx.db.account.findFirst({
-        where: {
-          userId: ctx.auth.userId, // Updated from ctx.session.user.id
-          provider: input,
-        },
-      });
+      // The Account table from NextAuth has been removed.
+      // TODO: Refactor or remove this procedure. If needed, fetch specific provider connection from Clerk.
+      if (env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED) {
+        console.warn("getAccountByProvider TRPC route called in Clerk mode - this is for legacy DB accounts and should be replaced/removed.");
+      } else {
+        console.warn("getAccountByProvider TRPC route called in legacy mode, but Account table is removed.");
+      }
+      return null; // Or throw an error
     }),
 
   hasProviderAccount: protectedProcedure
@@ -89,32 +94,28 @@ export const accountsRouter = createTRPCRouter({
           return false; // Return false on error to indicate account not found or inaccessible
         }
       } else {
-        // Legacy path
-        const account = await ctx.db.account.findFirst({
-          where: { userId: ctx.auth.userId, provider: input },
-        });
-        return !!account;
+        // Legacy path: The Account table from NextAuth has been removed.
+        // This path is effectively non-functional.
+        // TODO: Remove this legacy path once Clerk migration is complete and flag is removed/defaulted to true.
+        console.warn("hasProviderAccount TRPC route called legacy path, but Account table is removed.");
+        return false;
       }
     }),
 
   deleteAccount: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
-      // Coderabbit suggestion: Use findFirst then delete to ensure ownership and use unique filter for delete
-      const account = await ctx.db.account.findUnique({
-        where: { id: input },
-      });
-
-      if (!account) {
-        throw new Error("Account link not found.");
+      // The Account table from NextAuth has been removed.
+      // Deleting accounts should be handled via Clerk.
+      // TODO: Refactor or remove this procedure. If needed, use Clerk API to remove external account.
+      if (env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED) {
+        console.warn("deleteAccount TRPC route called in Clerk mode - this is for legacy DB accounts and should be replaced/removed. Account deletion should be managed via Clerk.");
+        throw new Error("Account deletion is now managed via Clerk user profile.");
+      } else {
+        console.warn("deleteAccount TRPC route called in legacy mode, but Account table is removed.");
+        throw new Error("Legacy account system is unavailable for deletion.");
       }
-
-      if (account.userId !== ctx.auth.userId) {
-        throw new Error("Access denied. You can only delete your own account links.");
-      }
-
-      return ctx.db.account.delete({
-        where: { id: input }, // Delete by unique id after verification
-      });
+      // Original logic would fail as ctx.db.account does not exist.
+      // return ctx.db.account.delete(...);
     }),
 });
