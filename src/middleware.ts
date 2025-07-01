@@ -31,13 +31,13 @@ export default clerkMiddleware((auth, req) => {
 
   // If it's a tRPC route that is NOT explicitly public, protect it.
   if (isTrpcProtectedRoute(req) && !isTrpcPublicRoute(req)) {
-    auth().protect();
+    auth.protect(); // Corrected: auth is an object, not a function here
     return;
   }
 
   // For any other route not explicitly public, protect it.
   // This makes the application "protected by default".
-  auth().protect();
+  auth.protect(); // Corrected: auth is an object, not a function here
 });
 
 export const config = {
