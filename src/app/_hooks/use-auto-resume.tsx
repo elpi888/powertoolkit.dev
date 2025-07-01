@@ -28,12 +28,12 @@ export function useAutoResume({
     const mostRecentMessage = initialMessages.at(-1);
 
     if (mostRecentMessage?.role === "user") {
-      experimental_resume();
+      experimental_resume?.(); // Optional chaining
     }
 
-    // we intentionally run this once
+    // we intentionally run this once, but list deps for ESLint's parser to avoid internal crash
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [autoResume, initialMessages, experimental_resume]);
 
   useEffect(() => {
     if (!data) return;
