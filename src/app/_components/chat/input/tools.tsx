@@ -15,34 +15,40 @@ import {
 } from "@/components/ui/tooltip";
 import { Loader2, Save, Wrench } from "lucide-react";
 import { useChatContext } from "@/app/_contexts/chat-context";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ToolkitList } from "@/components/toolkit/toolkit-list";
 import { useRouter, useSearchParams } from "next/navigation";
+// import { env } from "@/env"; // Moved to hook
+// import { Toolkits as ToolkitsEnum } from "@/toolkits/toolkits/shared"; // Moved to hook
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
 import { ToolkitIcons } from "@/components/toolkit/toolkit-icons";
-import { clientToolkits } from "@/toolkits/toolkits/client";
+// import { clientToolkits } from "@/toolkits/toolkits/client"; // No longer directly needed
 import { LanguageModelCapability } from "@/ai/types";
+import { useFilteredToolkits } from "@/app/_hooks/useFilteredToolkits";
+
 
 export const ToolsSelect = () => {
   const { toolkits, addToolkit, removeToolkit, workbench, selectedChatModel } =
     useChatContext();
   const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const { displayableToolkitIds } = useFilteredToolkits();
+  // isClerkAccountsEnabled also available if needed
 
   const [isOpen, setIsOpen] = useState(
-    Object.keys(clientToolkits).some((toolkit) => searchParams.get(toolkit)),
+    displayableToolkitIds.some((toolkitId) => searchParams.get(toolkitId)),
   );
-  const router = useRouter();
 
   useEffect(() => {
     if (
       !isOpen &&
-      Object.keys(clientToolkits).some((toolkit) => searchParams.get(toolkit))
+      displayableToolkitIds.some((toolkitId) => searchParams.get(toolkitId))
     ) {
       setIsOpen(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isOpen, displayableToolkitIds, searchParams]); // Made dependencies exhaustive
 
   const { mutate: updateWorkbench, isPending } =
     api.workbenches.updateWorkbench.useMutation({

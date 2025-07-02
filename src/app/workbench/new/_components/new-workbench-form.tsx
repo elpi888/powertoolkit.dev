@@ -22,7 +22,12 @@ import {
 } from "@/components/ui/dialog";
 import { Anvil, Plus } from "lucide-react";
 import { ToolkitIcons } from "@/components/toolkit/toolkit-icons";
-import { clientToolkits } from "@/toolkits/toolkits/client";
+// import { clientToolkits } from "@/toolkits/toolkits/client"; // No longer directly needed if hook provides IDs
+// import { useMemo } from "react"; // Moved to hook
+// import { env } from "@/env"; // Moved to hook
+// import { Toolkits as ToolkitsEnum } from "@/toolkits/toolkits/shared"; // Moved to hook
+import { useFilteredToolkits } from "@/app/_hooks/useFilteredToolkits";
+
 
 export function NewWorkbenchForm() {
   const router = useRouter();
@@ -31,6 +36,9 @@ export function NewWorkbenchForm() {
   const [selectedToolkits, setSelectedToolkits] = useState<SelectedToolkit[]>(
     [],
   );
+
+  const { displayableToolkitIds } = useFilteredToolkits();
+  // isClerkAccountsEnabled is also available from the hook if needed elsewhere
 
   const createMutation = api.workbenches.createWorkbench.useMutation({
     onSuccess: (workbench) => {
@@ -159,7 +167,7 @@ export function NewWorkbenchForm() {
                           </p>
                         </HStack>
                         <ToolkitIcons
-                          toolkits={Object.keys(clientToolkits) as Toolkits[]}
+                          toolkits={displayableToolkitIds}
                           iconContainerClassName="bg-background"
                           iconClassName="text-muted-foreground"
                         />

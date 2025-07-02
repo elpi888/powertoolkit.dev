@@ -11,6 +11,14 @@ import type {
   ToolkitConfig,
 } from "./types";
 
+// Define ServerToolkitToolsExecutor if not already in types.ts
+// This is speculative, type might be more complex or already exist
+// export type ServerToolkitToolsExecutor<Parameters extends ZodRawShape, ToolNames extends string> = (
+//   params: z.infer<ZodObject<Parameters>>,
+//   userId: string,
+// ) => Promise<Record<ToolNames, ServerTool> | null>;
+
+
 export const createClientToolkit = <
   ToolNames extends string,
   Parameters extends ZodRawShape = ZodRawShape,
@@ -42,21 +50,28 @@ export const createServerToolkit = <
 >(
   toolkitConfig: ToolkitConfig<ToolNames, Parameters>,
   systemPrompt: string,
-  toolConfigs: (
+  initializeToolsFn: ( // Renamed for clarity and to match my mental model
     params: z.infer<ZodObject<Parameters>>,
+    userId: string, // Added userId
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ) => Promise<Record<ToolNames, ServerToolConfig<any, any>>>,
+  ) => Promise<Record<ToolNames, ServerToolConfig<any, any>> | null>,
 ): ServerToolkit<ToolNames, Parameters> => {
   return {
     systemPrompt,
-    tools: async (params: z.infer<ZodObject<Parameters>>) => {
-      const tools = await toolConfigs(params);
+    tools: async (
+      params: z.infer<ZodObject<Parameters>>,
+      userId: string, // Added userId
+    ) => {
+      const initializedToolsMap = await initializeToolsFn(params, userId); // Pass userId
+      if (!initializedToolsMap) {
+        return null;
+      }
 
-      return Object.keys(tools).reduce(
+      return Object.keys(initializedToolsMap).reduce(
         (acc, toolName) => {
           const typedToolName = toolName as ToolNames;
           const baseToolConfig = toolkitConfig.tools[typedToolName];
-          const toolConfig = tools[typedToolName];
+          const toolConfig = initializedToolsMap[typedToolName];
           acc[typedToolName] = createServerTool(baseToolConfig, toolConfig);
           return acc;
         },

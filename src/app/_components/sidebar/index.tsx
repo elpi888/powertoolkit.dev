@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { auth } from "@/server/auth";
+import { auth } from "@clerk/nextjs/server"; // Changed to Clerk's auth
 import { api, HydrateClient } from "@/trpc/server";
 
 import {
@@ -24,17 +24,18 @@ import { WorkbenchSelect } from "./workbench-select";
 export async function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const [session] = await Promise.all([auth()]);
+  // const [session] = await Promise.all([auth()]); // Old NextAuth
+  const authData = await auth(); // Clerk's auth
 
-  if (!session) {
+  // Don't render sidebar for unauthenticated users
+  if (!authData.userId) {
     return null;
   }
 
-  if (session?.user) {
-    void api.workbenches.getWorkbenches.prefetchInfinite({
-      limit: 10,
-    });
-  }
+  // If user is authenticated (authData.userId exists)
+  void api.workbenches.getWorkbenches.prefetchInfinite({
+    limit: 10,
+  });
 
   return (
     <HydrateClient>
@@ -80,13 +81,8 @@ export async function AppSidebar({
               </VStack>
             </Link>
           </SidebarMenuButton>
-          <NavUser
-            user={{
-              name: session.user.name ?? "User",
-              email: session.user.email ?? "",
-              avatar: session.user.image ?? "",
-            }}
-          />
+          <NavUser />
+          {/* NavUser now uses useUser hook internally, no props needed from here */}
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>

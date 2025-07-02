@@ -1,5 +1,20 @@
+// File: src/server/api/routers/accounts.ts
+
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { clerkClient } from "@clerk/nextjs/server";
+import { env } from "@/env";
+
+const getClerkProviderId = (provider: string): string => {
+  const providerMapping: Record<string, string> = {
+    github: 'oauth_github',
+    google: 'oauth_google',
+    notion: 'oauth_notion',
+  };
+  const lowerProvider = provider.toLowerCase();
+  return providerMapping[lowerProvider] || `oauth_${lowerProvider}`;
+};
 
 export const accountsRouter = createTRPCRouter({
   getAccounts: protectedProcedure
@@ -9,78 +24,111 @@ export const accountsRouter = createTRPCRouter({
         cursor: z.string().nullish(),
       }),
     )
-    .query(async ({ ctx, input }) => {
-      const { limit, cursor } = input;
+    .query(async ({ ctx }) => {
+      if (!ctx.auth.userId) {
+        return { items: [], hasMore: false, nextCursor: null };
+      }
+      try {
+        const client = await clerkClient(); // Use await
+        const user = await client.users.getUser(ctx.auth.userId);
+        const mappedAccounts = user.externalAccounts.map((extAccount) => {
+          const providerName = extAccount.provider.startsWith("oauth_")
+            ? extAccount.provider.substring(6)
+            : extAccount.provider;
+          return {
+            id: extAccount.id,
+            provider: providerName,
+          };
+        });
 
-      const items = await ctx.db.account.findMany({
-        where: {
-          userId: ctx.auth.userId, // Updated from ctx.session.user.id
-        },
-        take: limit + 1,
-        cursor: cursor ? { id: cursor } : undefined,
-      });
-
-      const nextCursor =
-        items.length > limit ? items[items.length - 1]?.id : undefined;
-      const accounts = items.slice(0, limit);
-
-      return {
-        items: accounts,
-        hasMore: items.length > limit,
-        nextCursor,
-      };
-    }),
-
-  getAccount: protectedProcedure
-    .input(z.string())
-    .query(async ({ ctx, input }) => {
-      return ctx.db.account.findFirst({
-        where: {
-          id: input,
-          userId: ctx.auth.userId, // Updated from ctx.session.user.id
-        },
-      });
+        return {
+          items: mappedAccounts,
+          hasMore: false,
+          nextCursor: null,
+        };
+      } catch (error) {
+        console.error("[Clerk] Error fetching user's external accounts:", error);
+        return { items: [], hasMore: false, nextCursor: null };
+      }
     }),
 
   getAccountByProvider: protectedProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {
-      return ctx.db.account.findFirst({
-        where: {
-          userId: ctx.auth.userId, // Updated from ctx.session.user.id
-          provider: input,
-        },
-      });
+      if (!ctx.auth.userId) {
+        return null;
+      }
+      try {
+        const client = await clerkClient(); // Use await
+        const user = await client.users.getUser(ctx.auth.userId);
+        const clerkOAuthProviderId = getClerkProviderId(input);
+        const externalAccount = user.externalAccounts.find(
+          (acc) => acc.provider === clerkOAuthProviderId
+        );
+
+        if (externalAccount) {
+          const providerName = externalAccount.provider.startsWith("oauth_")
+            ? externalAccount.provider.substring(6)
+            : externalAccount.provider;
+          return {
+            id: externalAccount.id,
+            provider: providerName,
+            scope: externalAccount.approvedScopes,
+            emailAddress: externalAccount.emailAddress,
+            username: externalAccount.username,
+          };
+        }
+        return null;
+      } catch (error) {
+        console.error(`[Clerk] Error fetching user's external account for provider ${input}:`, error);
+        return null;
+      }
     }),
 
   hasProviderAccount: protectedProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {
-      const account = await ctx.db.account.findFirst({
-        where: { userId: ctx.auth.userId, provider: input }, // Updated from ctx.session.user.id
-      });
-
-      return !!account;
+      if (!ctx.auth.userId) {
+        return false;
+      }
+      try {
+        const client = await clerkClient(); // Use await
+        const user = await client.users.getUser(ctx.auth.userId);
+        const clerkOAuthProviderId = getClerkProviderId(input);
+        const hasConnection = user.externalAccounts.some(
+          (extAccount) => extAccount.provider === clerkOAuthProviderId
+        );
+        return hasConnection;
+      } catch (error) {
+        console.error(`[Clerk] Error checking for provider account ${input}:`, error);
+        return false;
+      }
     }),
 
   deleteAccount: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
-      // Coderabbit suggestion: Use findFirst then delete to ensure ownership and use unique filter for delete
-      const account = await ctx.db.account.findUnique({
-        where: { id: input },
-      });
-
-      if (!account) {
-        throw new Error("Account link not found.");
+      if (!ctx.auth.userId) {
+        throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User not authenticated."
+        });
       }
-
-      if (account.userId !== ctx.auth.userId) {
-        throw new Error("Access denied. You can only delete your own account links.");
+      try {
+        const client = await clerkClient(); // Use await
+        // Assuming DeleteUserExternalAccountParams is { userId: string, externalAccountId: string }
+        await client.users.deleteUserExternalAccount({
+          userId: ctx.auth.userId,
+          externalAccountId: input
+        });
+        return { success: true, message: "Account disconnected successfully via Clerk." };
+      } catch (error) {
+        console.error(`[Clerk] Error deleting external account ${input} for user ${ctx.auth.userId}:`, error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to disconnect the account. Please try again later.",
+          cause: error instanceof Error ? error : undefined,
+        });
       }
-
-      return ctx.db.account.delete({
-        where: { id: input }, // Delete by unique id after verification
-      });
     }),
 });

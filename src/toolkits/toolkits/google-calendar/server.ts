@@ -8,7 +8,10 @@ import {
   googleCalendarSearchEventsToolConfigServer,
 } from "./tools/server";
 import { GoogleCalendarTools } from "./tools";
-import { api } from "@/trpc/server";
+// import { api } from "@/trpc/server"; // No longer needed
+// import { env } from "@/env"; // No longer needed for NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED check
+import { clerkClient, type OauthAccessToken } from "@clerk/nextjs/server"; // Import clerkClient and OauthAccessToken
+import { TRPCError } from "@trpc/server"; // Import TRPCError
 
 export const googleCalendarToolkitServer = createServerToolkit(
   baseGoogleCalendarToolkitConfig,
@@ -31,25 +34,53 @@ export const googleCalendarToolkitServer = createServerToolkit(
 - Use Search Events for finding specific meetings, appointments, or events by keywords
 - When analyzing schedules, consider different calendar types (personal, work, shared calendars)
 - Check multiple calendars when assessing availability or conflicts`,
-  async () => {
-    const account = await api.accounts.getAccountByProvider("google");
+  async (params, userId) => { // Added userId
+    if (!userId) {
+      console.error("Google Calendar Server Toolkit: userId not provided.");
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "User authentication required for Google Calendar toolkit." });
+    }
 
-    if (!account?.access_token) {
-      throw new Error("No Google account found or access token missing");
+    const clerkProvider = "oauth_google"; // Standard Clerk provider ID for Google
+    const requiredScope = "https://www.googleapis.com/auth/calendar"; // Or more specific like calendar.readonly, calendar.events
+
+    let accessToken: string | null = null;
+    try {
+      const client = await clerkClient();
+      const tokenResponse = await client.users.getUserOauthAccessToken(userId, clerkProvider);
+
+      const googleToken = tokenResponse.data.find((token: OauthAccessToken) =>
+        token.provider === clerkProvider && // Ensure it's the google token
+        token.scopes?.includes(requiredScope)
+      );
+
+      if (googleToken?.token) {
+        accessToken = googleToken.token;
+      } else {
+        console.warn(`Google Calendar Server Toolkit: No OAuth token found for user ${userId} with provider ${clerkProvider} and required scope ${requiredScope}.`);
+        throw new TRPCError({ code: "FORBIDDEN", message: `Google Calendar access denied. Please ensure the app has '${requiredScope}' permission.` });
+      }
+    } catch (error) {
+      console.error(`Google Calendar Server Toolkit: Error fetching OAuth token for user ${userId}, provider ${clerkProvider}:`, error);
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to retrieve Google OAuth token.", cause: error instanceof Error ? error : undefined });
+    }
+
+    if (!accessToken) {
+      // This case should ideally be caught by the errors above.
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Google access token could not be obtained." });
     }
 
     return {
       [GoogleCalendarTools.ListCalendars]:
-        googleCalendarListCalendarsToolConfigServer(account.access_token),
+        googleCalendarListCalendarsToolConfigServer(accessToken),
       [GoogleCalendarTools.GetCalendar]:
-        googleCalendarGetCalendarToolConfigServer(account.access_token),
+        googleCalendarGetCalendarToolConfigServer(accessToken),
       [GoogleCalendarTools.ListEvents]:
-        googleCalendarListEventsToolConfigServer(account.access_token),
+        googleCalendarListEventsToolConfigServer(accessToken),
       [GoogleCalendarTools.GetEvent]: googleCalendarGetEventToolConfigServer(
-        account.access_token,
+        accessToken,
       ),
       [GoogleCalendarTools.SearchEvents]:
-        googleCalendarSearchEventsToolConfigServer(account.access_token),
+        googleCalendarSearchEventsToolConfigServer(accessToken),
     };
   },
 );

@@ -42,7 +42,8 @@ export type ServerToolkit<
   systemPrompt: string;
   tools: (
     params: z.infer<ZodObject<Parameters>>,
-  ) => Promise<Record<ToolNames, ServerTool>>;
+    userId: string, // Added userId
+  ) => Promise<Record<ToolNames, ServerTool> | null>;
 };
 
 // ------------------------------------------------------------

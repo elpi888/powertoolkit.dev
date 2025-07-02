@@ -3,7 +3,7 @@ import { baseMem0ToolkitConfig } from "./base";
 import { mem0AddMemoryToolConfigServer } from "./tools/add_memory/server";
 import { mem0SearchMemoriesToolConfigServer } from "./tools/search_memories/server";
 import { Mem0Tools } from "./tools/tools";
-import { auth } from "@/server/auth";
+import { auth } from "@clerk/nextjs/server"; // Changed to Clerk's auth
 
 export const mem0ToolkitServer = createServerToolkit(
   baseMem0ToolkitConfig,
@@ -29,16 +29,19 @@ This toolkit enables persistent, personalized interactions by maintaining a know
 
 You can also ask the user for more information if you don't have enough information after a search to answer a question.`,
   async () => {
-    const session = await auth();
+    const authData = await auth(); // Use Clerk's auth
 
-    if (!session?.user?.id) {
-      throw new Error("User not found");
+    if (!authData.userId) { // Check Clerk's userId
+      // This toolkit requires a user ID. If not available, it cannot function.
+      // Unlike other toolkits that might return null based on feature flag,
+      // this one throws an error if no user ID, which is reasonable for a memory toolkit.
+      throw new Error("User not authenticated, Mem0 toolkit cannot be initialized.");
     }
 
     return {
-      [Mem0Tools.AddMemory]: mem0AddMemoryToolConfigServer(session.user.id),
+      [Mem0Tools.AddMemory]: mem0AddMemoryToolConfigServer(authData.userId),
       [Mem0Tools.SearchMemories]: mem0SearchMemoriesToolConfigServer(
-        session.user.id,
+        authData.userId,
       ),
     };
   },

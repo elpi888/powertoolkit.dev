@@ -23,9 +23,14 @@ import {
 } from "@/components/ui/dialog";
 import { Anvil, Plus } from "lucide-react";
 import { ToolkitIcons } from "@/components/toolkit/toolkit-icons";
-import { clientToolkits } from "@/toolkits/toolkits/client";
-import { getClientToolkit } from "@/toolkits/toolkits/client";
+// import { clientToolkits } from "@/toolkits/toolkits/client"; // No longer directly needed
+import { getClientToolkit } from "@/toolkits/toolkits/client"; // Still needed for initial selection
 import type { Workbench } from "@prisma/client";
+// import { useMemo } from "react"; // Moved to hook
+// import { env } from "@/env"; // Moved to hook
+import { Toolkits as ToolkitsEnum } from "@/toolkits/toolkits/shared"; // Still needed for enum access
+import { useFilteredToolkits } from "@/app/_hooks/useFilteredToolkits";
+
 
 interface EditWorkbenchFormProps {
   workbench: Workbench;
@@ -38,7 +43,7 @@ export function EditWorkbenchForm({ workbench }: EditWorkbenchFormProps) {
   const [selectedToolkits, setSelectedToolkits] = useState<SelectedToolkit[]>(
     workbench.toolkitIds.map((id) => {
       const typedId = id as Toolkits;
-      const toolkit = getClientToolkit(typedId);
+      const toolkit = getClientToolkit(typedId); // getClientToolkit still uses the full clientToolkits list
       return {
         id: typedId,
         toolkit,
@@ -46,6 +51,9 @@ export function EditWorkbenchForm({ workbench }: EditWorkbenchFormProps) {
       };
     }),
   );
+
+  const { displayableToolkitIds } = useFilteredToolkits();
+  // isClerkAccountsEnabled is also available
 
   const utils = api.useUtils();
   const updateMutation = api.workbenches.updateWorkbench.useMutation({
@@ -172,7 +180,7 @@ export function EditWorkbenchForm({ workbench }: EditWorkbenchFormProps) {
                           </p>
                         </HStack>
                         <ToolkitIcons
-                          toolkits={Object.keys(clientToolkits) as Toolkits[]}
+                          toolkits={displayableToolkitIds}
                           iconContainerClassName="bg-background"
                           iconClassName="text-muted-foreground"
                         />

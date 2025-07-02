@@ -51,7 +51,7 @@ export const imagesRouter = createTRPCRouter({
     }),
 
   getImageCountByUserId: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
+    const userId = ctx.auth.userId;
 
     return ctx.db.image.count({
       where: {

@@ -11,8 +11,9 @@ import {
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { signIn } from "next-auth/react";
+// import { signIn } from "next-auth/react"; // Removed: Clerk handles connections
 import { Loader2 } from "lucide-react";
+// import { toast } from "sonner"; // No longer used
 import {
   Tooltip,
   TooltipContent,
@@ -23,6 +24,9 @@ import Link from "next/link";
 import { SiGooglecalendar } from "@icons-pack/react-simple-icons";
 import { ToolkitGroups } from "@/toolkits/types";
 import { Toolkits } from "../shared";
+import { env } from "@/env";
+// import { useMemo } from "react"; // No longer used
+import { useUser } from "@clerk/nextjs"; // Added useUser
 
 const calendarScope = "https://www.googleapis.com/auth/calendar";
 
@@ -34,15 +38,13 @@ export const googleCalendarClientToolkit = createClientToolkit(
     icon: SiGooglecalendar,
     form: null,
     addToolkitWrapper: ({ children }) => {
-      const { data: account, isLoading: isLoadingAccount } =
-        api.accounts.getAccountByProvider.useQuery("google");
+      const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
 
-      const { data: hasAccess, isLoading: isLoadingAccess } =
-        api.features.hasFeature.useQuery({
-          feature: "google-calendar",
-        });
+      // Common: Check for feature access first
+      const { data: hasFeatureAccess, isLoading: isLoadingFeatureAccess } =
+        api.features.hasFeature.useQuery({ feature: "google-calendar" });
 
-      if (isLoadingAccount || isLoadingAccess) {
+      if (isLoadingFeatureAccess) {
         return (
           <Button
             variant="outline"
@@ -55,7 +57,7 @@ export const googleCalendarClientToolkit = createClientToolkit(
         );
       }
 
-      if (!hasAccess) {
+      if (!hasFeatureAccess) {
         return (
           <TooltipProvider>
             <Tooltip>
@@ -80,60 +82,49 @@ export const googleCalendarClientToolkit = createClientToolkit(
         );
       }
 
-      if (!account) {
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              void signIn(
-                "google",
-                {
-                  callbackUrl: `${window.location.href}?${Toolkits.GoogleCalendar}=true`,
-                },
-                {
-                  prompt: "consent",
-                  access_type: "offline",
-                  response_type: "code",
-                  include_granted_scopes: true,
-                  scope: `openid email profile ${calendarScope}`,
-                },
-              );
-            }}
-            className="bg-transparent"
-          >
-            Connect
-          </Button>
-        );
-      }
+      // Feature access is granted, now handle Clerk vs Legacy
+      if (useClerkAccounts) {
+        const { user, isLoaded: isUserLoaded } = useUser();
 
-      if (!account?.scope?.includes(calendarScope)) {
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              void signIn(
-                "google",
-                {
-                  callbackUrl: `${window.location.href}?${Toolkits.GoogleCalendar}=true`,
-                },
-                {
-                  prompt: "consent",
-                  access_type: "offline",
-                  response_type: "code",
-                  include_granted_scopes: true,
-                  scope: `${account?.scope} ${calendarScope}`,
-                },
-              );
-            }}
-          >
-            Grant Access
-          </Button>
-        );
-      }
+        if (!isUserLoaded) {
+          return ( // Clerk User loading
+            <Button variant="outline" size="sm" disabled className="bg-transparent">
+              <Loader2 className="size-4 animate-spin" />
+            </Button>
+          );
+        }
 
-      return children;
+        const googleAccount = user?.externalAccounts?.find(
+          (acc) => (acc.provider as string) === "oauth_google"
+        );
+
+        if (!googleAccount) {
+          // Connect Google Calendar via Clerk user profile
+          return null;
+        }
+
+        // externalAccount.approvedScopes is a space-separated string.
+        const currentScopes = googleAccount.approvedScopes ?? "";
+        const hasCalendarScopeAccess = currentScopes.split(' ').includes(calendarScope);
+
+        if (!hasCalendarScopeAccess) {
+          // Grant Google Calendar access with required scopes via Clerk user profile
+          return null;
+        }
+
+        return children; // Clerk user has Google connection with calendar scope
+      }
+      // Legacy path removed. Assuming env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED is true.
+      // If it were false, this component would not render the children if feature access was granted.
+      // This path should ideally not be reached if Clerk is the sole auth method and feature flag is true.
+      // The api.features.hasFeature check is outside the Clerk/legacy conditional, so it still applies.
+      // If useClerkAccounts is false (i.e., env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED is false),
+      // this toolkit component cannot perform its Clerk-based connection checks.
+      // Since Clerk is the sole auth provider, this state implies a misconfiguration
+      // or an unsupported environment for this toolkit. Return null to prevent rendering
+      // the toolkit UI which relies on Clerk-managed connections.
+      // The api.features.hasFeature check above still gates overall feature access.
+      return null;
     },
     type: ToolkitGroups.DataSource,
   },

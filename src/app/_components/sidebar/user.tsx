@@ -20,19 +20,26 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useTheme } from "@/app/_contexts/theme";
-import { signOut } from "next-auth/react";
+import { useUser, SignOutButton } from "@clerk/nextjs"; // Clerk imports
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+export function NavUser() { // Removed user prop
   const { isMobile } = useSidebar();
   const { theme, toggleTheme } = useTheme();
+  const { user, isSignedIn } = useUser(); // Get user data from Clerk
+
+  if (!isSignedIn || !user) {
+    // This component likely won't be rendered if not signed in,
+    // but as a safeguard or if used in a context where user might be null.
+    // Alternatively, wrap parent component with <SignedIn>
+    return null;
+  }
+
+  const userName = user.fullName ??
+    (user.primaryEmailAddress?.emailAddress.split('@')[0]) ??
+    "User";
+  const userEmail = user.primaryEmailAddress?.emailAddress ?? "";
+  const userAvatar = user.imageUrl;
+  const userInitials = userName?.charAt(0).toUpperCase() ?? "U";
 
   return (
     <SidebarMenu>
@@ -44,14 +51,14 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage src={userAvatar} alt={userName} />
                 <AvatarFallback className="rounded-lg">
-                  {user.name.charAt(0)}
+                  {userInitials}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
+                <span className="truncate font-medium">{userName}</span>
+                <span className="truncate text-xs">{userEmail}</span>
               </div>
               <ChevronRight className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -65,12 +72,12 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarImage src={userAvatar} alt={userName} />
+                  <AvatarFallback className="rounded-lg">{userInitials}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate font-medium">{userName}</span>
+                  <span className="truncate text-xs">{userEmail}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -98,10 +105,12 @@ export function NavUser({
               {theme === "light" ? "Light mode" : "Dark mode"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()}>
-              <LogOut />
-              Sign Out
-            </DropdownMenuItem>
+            <SignOutButton>
+              <DropdownMenuItem>
+                <LogOut className="mr-2 h-4 w-4" /> {/* Added margin like other items */}
+                Sign Out
+              </DropdownMenuItem>
+            </SignOutButton>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

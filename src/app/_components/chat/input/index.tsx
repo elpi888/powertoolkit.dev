@@ -68,18 +68,19 @@ const PureMultimodalInput: React.FC<Props> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      adjustHeight();
-    }
-  }, []);
-
-  const adjustHeight = () => {
+  // Moved adjustHeight definition before its use in useEffect hooks
+  const adjustHeight = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`;
     }
-  };
+  }, []); // textareaRef is stable
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      adjustHeight();
+    }
+  }, [adjustHeight]);
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     "input",
@@ -94,9 +95,10 @@ const PureMultimodalInput: React.FC<Props> = ({
       setInput(finalValue);
       adjustHeight();
     }
-    // Only run once after hydration
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // This effect is intended to run once on mount to reconcile initial input state.
+    // Adding dependencies to satisfy exhaustive-deps.
+    // setInput and adjustHeight are memoized/stable. localStorageInput might cause re-runs if it changes externally.
+  }, [localStorageInput, setInput, adjustHeight]);
 
   useEffect(() => {
     setLocalStorageInput(input);

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { auth } from "@/server/auth";
+import { auth } from "@clerk/nextjs/server"; // Changed to Clerk's auth
 import { Chat } from "@/app/_components/chat";
 import { api } from "@/trpc/server";
 
@@ -10,7 +10,7 @@ export default async function Page(props: {
   const params = await props.params;
   const { id, chatId } = params;
 
-  const session = await auth();
+  const authData = await auth(); // Use Clerk's auth
 
   const [chat, workbench] = await Promise.all([
     api.chats.getChat(chatId),
@@ -25,7 +25,7 @@ export default async function Page(props: {
     <Chat
       id={chat.id}
       initialVisibilityType={chat.visibility}
-      isReadonly={session?.user?.id !== chat.userId}
+      isReadonly={authData.userId !== chat.userId} // Use Clerk's userId
       isNew={false}
       workbench={workbench}
     />

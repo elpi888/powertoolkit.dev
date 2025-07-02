@@ -8,8 +8,9 @@ import {
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { signIn } from "next-auth/react";
+// import { signIn } from "next-auth/react"; // Removed: Clerk handles connections
 import { Loader2 } from "lucide-react";
+// import { toast } from "sonner"; // No longer needed
 import {
   Tooltip,
   TooltipContent,
@@ -20,6 +21,9 @@ import Link from "next/link";
 import { SiGoogledrive } from "@icons-pack/react-simple-icons";
 import { ToolkitGroups } from "@/toolkits/types";
 import { Toolkits } from "../shared";
+import { env } from "@/env";
+// import { useMemo } from "react"; // No longer used
+import { useUser } from "@clerk/nextjs"; // Import useUser
 
 const driveScope = "https://www.googleapis.com/auth/drive.readonly";
 
@@ -31,28 +35,22 @@ export const googleDriveClientToolkit = createClientToolkit(
     icon: SiGoogledrive,
     form: null,
     addToolkitWrapper: ({ children }) => {
-      const { data: account, isLoading: isLoadingAccount } =
-        api.accounts.getAccountByProvider.useQuery("google");
+      const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
 
-      const { data: hasAccess, isLoading: isLoadingAccess } =
-        api.features.hasFeature.useQuery({
-          feature: "google-drive",
-        });
+      // Common: Check for feature access first
+      // Note: api.features.hasFeature might be removed if not used after legacy path removal
+      const { data: hasFeatureAccess, isLoading: isLoadingFeatureAccess } =
+        api.features.hasFeature.useQuery({ feature: "google-drive" });
 
-      if (isLoadingAccount || isLoadingAccess) {
+      if (isLoadingFeatureAccess) {
         return (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled
-            className="bg-transparent"
-          >
+          <Button variant="outline" size="sm" disabled className="bg-transparent">
             <Loader2 className="size-4 animate-spin" />
           </Button>
         );
       }
 
-      if (!hasAccess) {
+      if (!hasFeatureAccess) {
         return (
           <TooltipProvider>
             <Tooltip>
@@ -77,61 +75,43 @@ export const googleDriveClientToolkit = createClientToolkit(
         );
       }
 
-      if (!account) {
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              void signIn(
-                "google",
-                {
-                  callbackUrl: `${window.location.href}?${Toolkits.GoogleDrive}=true`,
-                },
-                {
-                  prompt: "consent",
-                  access_type: "offline",
-                  response_type: "code",
-                  include_granted_scopes: true,
-                  scope: `openid email profile ${driveScope}`,
-                },
-              );
-            }}
-            className="bg-transparent"
-          >
-            Connect
-          </Button>
+      // Feature access is granted, now handle Clerk for account checks
+      if (useClerkAccounts) {
+        const { user, isLoaded: isUserLoaded } = useUser();
+
+        if (!isUserLoaded) {
+          return ( // Clerk User loading
+            <Button variant="outline" size="sm" disabled className="bg-transparent">
+              <Loader2 className="size-4 animate-spin" />
+            </Button>
+          );
+        }
+
+        const googleAccount = user?.externalAccounts?.find(
+          (acc) => (acc.provider as string) === "oauth_google" // Assuming "oauth_google" for Drive as well
         );
+
+        if (!googleAccount) {
+          // User has not connected their Google account via Clerk
+          return null;
+        }
+
+        const currentScopes = googleAccount.approvedScopes ?? "";
+        const hasDriveScopeAccess = currentScopes.split(' ').includes(driveScope);
+
+        if (!hasDriveScopeAccess) {
+          // User has connected Google, but not with the required Drive scope
+          return null;
+        }
+
+        return children; // All checks passed for Clerk
       }
 
-      if (!account?.scope?.includes(driveScope)) {
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              void signIn(
-                "google",
-                {
-                  callbackUrl: `${window.location.href}?${Toolkits.GoogleDrive}=true`,
-                },
-                {
-                  prompt: "consent",
-                  access_type: "offline",
-                  response_type: "code",
-                  include_granted_scopes: true,
-                  scope: `${account?.scope} ${driveScope}`,
-                },
-              );
-            }}
-            className="bg-transparent"
-          >
-            Grant Access
-          </Button>
-        );
-      }
-
-      return children;
+      // If useClerkAccounts is false (i.e., env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED is false),
+      // this toolkit component cannot perform its Clerk-based connection checks.
+      // Since Clerk is the sole auth provider, this state implies a misconfiguration.
+      // Return null to prevent rendering the toolkit UI.
+      return null;
     },
     type: ToolkitGroups.KnowledgeBase,
   },
