@@ -36,7 +36,7 @@ export const githubClientToolkit = createClientToolkit(
           );
         }
         const hasGithubConnection = user?.externalAccounts?.some(
-          (acc) => (acc.provider as string) === "oauth_github"
+          (acc) => (acc.provider as string) === "github"
         );
 
         if (!hasGithubConnection) {
