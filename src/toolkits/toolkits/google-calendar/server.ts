@@ -10,7 +10,7 @@ import {
 import { GoogleCalendarTools } from "./tools";
 // import { api } from "@/trpc/server"; // No longer needed
 // import { env } from "@/env"; // No longer needed for NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED check
-import { clerkClient } from "@clerk/nextjs/server"; // Import clerkClient
+import { clerkClient, type OauthAccessToken } from "@clerk/nextjs/server"; // Import clerkClient and OauthAccessToken
 import { TRPCError } from "@trpc/server"; // Import TRPCError
 
 export const googleCalendarToolkitServer = createServerToolkit(
@@ -41,18 +41,23 @@ export const googleCalendarToolkitServer = createServerToolkit(
     }
 
     const clerkProvider = "oauth_google"; // Standard Clerk provider ID for Google
+    const requiredScope = "https://www.googleapis.com/auth/calendar"; // Or more specific like calendar.readonly, calendar.events
 
     let accessToken: string | null = null;
     try {
-      const client = await clerkClient(); // Revert to await
+      const client = await clerkClient();
       const tokenResponse = await client.users.getUserOauthAccessToken(userId, clerkProvider);
-      // TODO: Check tokenResponse.data for required scopes if necessary (e.g., calendarScope)
-      // tokenResponse.data[0]?.scopes
-      if (tokenResponse.data.length > 0 && tokenResponse.data[0]?.token) {
-        accessToken = tokenResponse.data[0].token;
+
+      const googleToken = tokenResponse.data.find((token: OauthAccessToken) =>
+        token.provider === clerkProvider && // Ensure it's the google token
+        token.scopes?.includes(requiredScope)
+      );
+
+      if (googleToken?.token) {
+        accessToken = googleToken.token;
       } else {
-        console.warn(`Google Calendar Server Toolkit: No OAuth token found for user ${userId}, provider ${clerkProvider}.`);
-        throw new TRPCError({ code: "NOT_FOUND", message: "Google OAuth token not found or access denied." });
+        console.warn(`Google Calendar Server Toolkit: No OAuth token found for user ${userId} with provider ${clerkProvider} and required scope ${requiredScope}.`);
+        throw new TRPCError({ code: "FORBIDDEN", message: `Google Calendar access denied. Please ensure the app has '${requiredScope}' permission.` });
       }
     } catch (error) {
       console.error(`Google Calendar Server Toolkit: Error fetching OAuth token for user ${userId}, provider ${clerkProvider}:`, error);
