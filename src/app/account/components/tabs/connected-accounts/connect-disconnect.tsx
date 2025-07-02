@@ -22,12 +22,10 @@ export const ConnectButton: React.FC<ConnectProps> = ({ provider }) => {
   return (
     <Button
       onClick={() => {
-        // TODO: Refactor for Clerk or remove.
-        // Clerk typically handles new connections via its UI (e.g., UserProfile component or sign-in flow).
-        // This button's original NextAuth signIn logic is no longer applicable.
-        // Link to Clerk user profile or documentation
-        // TODO: Verify the correct path to Clerk's connected accounts / security section
-        window.open('/user-profile#connected-accounts', '_blank');
+        // Direct users to their Clerk User Profile to manage connected accounts.
+        // The UserProfile component is mounted at '/user-profile', and the 'Account'
+        // section (which includes connected accounts) is typically at '/user-profile/account'.
+        window.open('/user-profile/account', '_blank');
       }}
     >
       Manage via Profile
