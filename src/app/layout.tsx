@@ -17,7 +17,7 @@ import type { Metadata } from "next";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "Toolkit.dev",
+  title: "My Team AI",
   description: "A highly-configurable open-source chat client",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
