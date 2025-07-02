@@ -12,7 +12,11 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const authData = await auth(); // auth() from Clerk
 
   if (!authData.userId) { // Check for userId from Clerk's auth response
-    redirect(`/login?redirect=/${id}`); // Or Clerk's sign-in URL if different
+    // Use Clerk’s default sign-in route and param
+    redirect(`/sign-in?redirectUrl=/${id}`);
+    // Or import and use Clerk’s helper instead:
+    // import { redirectToSignIn } from '@clerk/nextjs/server';
+    // redirectToSignIn({ redirectUrl: `/${id}` });
   }
 
   const chat = await api.chats.getChat(id);
