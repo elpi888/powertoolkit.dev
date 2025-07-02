@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 // import { signIn } from "next-auth/react"; // Removed: Clerk handles connections
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner"; // For placeholder action
+// import { toast } from "sonner"; // No longer needed
 import {
   Tooltip,
   TooltipContent,
@@ -22,7 +22,8 @@ import { SiGoogledrive } from "@icons-pack/react-simple-icons";
 import { ToolkitGroups } from "@/toolkits/types";
 import { Toolkits } from "../shared";
 import { env } from "@/env";
-import { useMemo } from "react";
+// import { useMemo } from "react"; // No longer used
+import { useUser } from "@clerk/nextjs"; // Import useUser
 
 const driveScope = "https://www.googleapis.com/auth/drive.readonly";
 
@@ -34,9 +35,10 @@ export const googleDriveClientToolkit = createClientToolkit(
     icon: SiGoogledrive,
     form: null,
     addToolkitWrapper: ({ children }) => {
-      const useClerkAccounts = useMemo(() => env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED, []);
+      const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
 
       // Common: Check for feature access first
+      // Note: api.features.hasFeature might be removed if not used after legacy path removal
       const { data: hasFeatureAccess, isLoading: isLoadingFeatureAccess } =
         api.features.hasFeature.useQuery({ feature: "google-drive" });
 
@@ -73,67 +75,43 @@ export const googleDriveClientToolkit = createClientToolkit(
         );
       }
 
-      // Feature access is granted, now handle Clerk vs Legacy
+      // Feature access is granted, now handle Clerk for account checks
       if (useClerkAccounts) {
-        // TODO: Implement Clerk-based account and scope checking here for Google Drive.
-        // For now, if Clerk is active and feature access is granted, render children.
-        // Connection status is assumed to be handled by Clerk's global UI / UserProfile.
-        return children;
-      }
+        const { user, isLoaded: isUserLoaded } = useUser();
 
-      // Legacy path (useClerkAccounts is false and hasFeatureAccess is true)
-      const { data: account, isLoading: isLoadingAccount } =
-        api.accounts.getAccountByProvider.useQuery("google"); // Query runs as useClerkAccounts is false
+        if (!isUserLoaded) {
+          return ( // Clerk User loading
+            <Button variant="outline" size="sm" disabled className="bg-transparent">
+              <Loader2 className="size-4 animate-spin" />
+            </Button>
+          );
+        }
 
-      if (isLoadingAccount) {
-        return (
-          <Button variant="outline" size="sm" disabled className="bg-transparent">
-            <Loader2 className="size-4 animate-spin" />
-          </Button>
+        const googleAccount = user?.externalAccounts?.find(
+          (acc) => (acc.provider as string) === "oauth_google" // Assuming "oauth_google" for Drive as well
         );
+
+        if (!googleAccount) {
+          // User has not connected their Google account via Clerk
+          return null;
+        }
+
+        const currentScopes = googleAccount.approvedScopes ?? "";
+        const hasDriveScopeAccess = currentScopes.split(' ').includes(driveScope);
+
+        if (!hasDriveScopeAccess) {
+          // User has connected Google, but not with the required Drive scope
+          return null;
+        }
+
+        return children; // All checks passed for Clerk
       }
 
-      if (!account) {
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              // TODO: Refactor for Clerk.
-              // This should ideally link to Clerk's User Profile page where connections can be managed,
-              // This legacy path implies Clerk is not yet the primary method for this user,
-              // but we guide them towards the new central place for connections.
-              toast.info("Please manage your Google Drive connection via your user profile.");
-              window.open('/user-profile#connected-accounts', '_blank');
-            }}
-            className="bg-transparent"
-          >
-            Manage Connection
-          </Button>
-        );
-      }
-
-      if (!account?.scope?.includes(driveScope)) {
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              // TODO: Refactor for Clerk.
-              // This should ideally link to Clerk's User Profile page where connections can be managed,
-              // This legacy path implies Clerk is not yet the primary method for this user,
-              // but we guide them towards the new central place for connections and permissions.
-              toast.info("Please update Google Drive permissions via your user profile.");
-              window.open('/user-profile#connected-accounts', '_blank');
-            }}
-            className="bg-transparent"
-          >
-            Update Permissions
-          </Button>
-        );
-      }
-
-      return children;
+      // If useClerkAccounts is false (i.e., env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED is false),
+      // this toolkit component cannot perform its Clerk-based connection checks.
+      // Since Clerk is the sole auth provider, this state implies a misconfiguration.
+      // Return null to prevent rendering the toolkit UI.
+      return null;
     },
     type: ToolkitGroups.KnowledgeBase,
   },
