@@ -118,10 +118,13 @@ export const googleCalendarClientToolkit = createClientToolkit(
       // If it were false, this component would not render the children if feature access was granted.
       // This path should ideally not be reached if Clerk is the sole auth method and feature flag is true.
       // The api.features.hasFeature check is outside the Clerk/legacy conditional, so it still applies.
-      // If useClerkAccounts is false, and hasFeatureAccess is true, it will fall through here.
-      // To be fully robust for Clerk-only, the outer logic should ensure this state isn't problematic.
-      // For now, returning children to match behaviour of other cleaned up toolkits.
-      return children;
+      // If useClerkAccounts is false (i.e., env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED is false),
+      // this toolkit component cannot perform its Clerk-based connection checks.
+      // Since Clerk is the sole auth provider, this state implies a misconfiguration
+      // or an unsupported environment for this toolkit. Return null to prevent rendering
+      // the toolkit UI which relies on Clerk-managed connections.
+      // The api.features.hasFeature check above still gates overall feature access.
+      return null;
     },
     type: ToolkitGroups.DataSource,
   },
