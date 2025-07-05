@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { HStack } from "@/components/ui/stack";
 import { Button } from "@/components/ui/button";
-import { DisconnectButton } from "./connect-disconnect"; // Assuming this will be adapted or replaced
 // We will need icons, e.g., from lucide-react
 import { CalendarDays, Github } from "lucide-react"; // Example icons
 
@@ -49,8 +48,8 @@ export const ConnectedAccounts = () => {
   const [error, setError] = useState<string | null>(null);
 
   // For individual button loading states
-  const [isConnecting, setIsConnecting] = useState<{ [serviceId: string]: boolean }>({});
-  const [isDisconnecting, setIsDisconnecting] = useState<{ [connectedAccountId: string]: boolean }>({});
+  const [isConnecting, setIsConnecting] = useState<Record<string, boolean>>({});
+  const [isDisconnecting, setIsDisconnecting] = useState<Record<string, boolean>>({});
 
   const fetchConnectedAccounts = async () => {
     setIsLoading(true);
@@ -112,24 +111,19 @@ export const ConnectedAccounts = () => {
     setIsDisconnecting(prev => ({ ...prev, [connectedAccountId]: true }));
     setError(null);
     try {
-      // TODO: Implement POST request to `/api/composio/connect/disconnect`
-      // For now, simulate a delay and then refresh.
-      console.log(`Attempting to disconnect account: ${connectedAccountId}`);
-      // const response = await fetch("/api/composio/connect/disconnect", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ connectedAccountId }),
-      // });
+      const response = await fetch("/api/composio/connect/disconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ connectedAccountId }),
+      });
 
-      // if (!response.ok) {
-      //   const errorData = await response.json().catch(() => ({ error: `Failed to disconnect ${appName}` }));
-      //   throw new Error(errorData.error || `Failed to disconnect ${appName}`);
-      // }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: `Failed to disconnect ${appName}` }));
+        throw new Error(errorData.error || `Failed to disconnect ${appName}`);
+      }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert(`Disconnect functionality for ${appName} (ID: ${connectedAccountId}) is not yet fully implemented with backend. This is a placeholder. We would typically call the disconnect API here and then refresh.`);
-
+      // Optional: show a success toast/message
+      console.log(`${appName} disconnected successfully.`);
 
       // After successful disconnect from backend:
       fetchConnectedAccounts(); // Refresh the list

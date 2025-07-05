@@ -29,21 +29,35 @@ export async function POST(request: Request) {
     }
 
     const { service } = validationResult.data;
-    let integrationId: string | undefined;
 
-    // For now, we only support google_calendar
-    // This can be expanded to a switch or lookup if more services are added
-    if (service.toLowerCase() === "google_calendar") {
-      integrationId = env.COMPOSIO_GOOGLE_CALENDAR_INTEGRATION_ID;
-    } else {
+    const SERVICE_INTEGRATION_MAP: Record<string, string | undefined> = {
+      google_calendar: env.COMPOSIO_GOOGLE_CALENDAR_INTEGRATION_ID,
+      // Future services can be added here, e.g.:
+      // github: env.COMPOSIO_GITHUB_INTEGRATION_ID,
+    };
+
+    const integrationId = SERVICE_INTEGRATION_MAP[service.toLowerCase()];
+
+    if (!integrationId) {
+      // Check if the service key exists but the env variable is missing
+      if (service.toLowerCase() in SERVICE_INTEGRATION_MAP) {
+        console.error(`Integration ID for service ${service} is not configured in environment variables.`);
+        return NextResponse.json(
+          { error: `Configuration error for service: ${service}. Environment variable missing.` },
+          { status: 500 },
+        );
+      }
+      // Service key itself is not in our map
       return NextResponse.json(
         { error: "Unsupported service provided." },
         { status: 400 },
       );
     }
 
-    if (!integrationId) {
-      console.error(`Integration ID for service ${service} is not configured in environment variables.`);
+    // At this point, integrationId is guaranteed to be a string if no error was thrown above.
+    // However, to satisfy TypeScript if the check above was different, ensure it's treated as string.
+    // if (!integrationId) {
+    //   console.error(`Integration ID for service ${service} is not configured in environment variables.`);
       return NextResponse.json(
         { error: `Configuration error for service: ${service}` },
         { status: 500 },
