@@ -18,7 +18,7 @@ interface StarterPrompt {
 const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
   // Multi-toolkit prompts (4+ toolkits - highest priority)
   {
-    title: "Analyze Toolkit.dev",
+    title: "Analyze My Team AI",
     prompt:
       "Search GitHub for jasonhedman/toolkit.dev, analyze the repo, clone the repo and read the readme in a sandbox environment, and give me a getting started guide.",
     toolkitIds: [Toolkits.Github, Toolkits.E2B, Toolkits.Exa],

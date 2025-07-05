@@ -13,7 +13,7 @@ export default function LoginPage() {
         <Logo className="size-16" />
         <VStack className="gap-1">
           <h1 className="text-primary text-2xl font-bold text-center">
-            Welcome to Toolkit.dev
+            Welcome to My Team AI
           </h1>
           <p className="text-muted-foreground text-center text-sm">
             Sign in to continue

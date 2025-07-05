@@ -11,7 +11,7 @@ export const Navbar = () => {
       <HStack>
         <Logo className="size-6" />
         <h1 className="overflow-hidden text-lg font-bold whitespace-nowrap">
-          Toolkit.dev
+          My Team AI
         </h1>
       </HStack>
       <HStack>

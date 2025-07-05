@@ -52,6 +52,8 @@ export const env = createEnv({
     CLERK_WEBHOOK_SECRET: z.string().startsWith("whsec_").optional(), // Optional
     // ...createAuthSchema(), // Removed
     ...createImageModelSchema(),
+    COMPOSIO_API_KEY: z.string().min(1),
+    COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID: z.string().min(1),
   },
 
   /**
@@ -86,6 +88,8 @@ export const env = createEnv({
     NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED: process.env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED,
     // ...authRuntimeEnv(), // Removed
     ...imageModelRuntimeEnv(),
+    COMPOSIO_API_KEY: process.env.COMPOSIO_API_KEY,
+    COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID: process.env.COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

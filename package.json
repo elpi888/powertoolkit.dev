@@ -31,6 +31,7 @@
     "@ai-sdk/react": "^1.2.12",
     "@ai-sdk/xai": "^1.2.16",
     "@clerk/nextjs": "^6.23.2",
+    "@composio/core": "0.1.36-next.7",
     "@e2b/code-interpreter": "^1.5.1",
     "@icons-pack/react-simple-icons": "^13.1.0",
     "@modelcontextprotocol/sdk": "^1.12.0",
