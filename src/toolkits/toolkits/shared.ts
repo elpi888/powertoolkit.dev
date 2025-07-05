@@ -18,7 +18,7 @@ import type { E2BTools } from "./e2b/tools/tools";
 export enum Toolkits {
   Exa = "exa",
   Image = "image",
-  Github = "github",
+  // Github = "github",
   GoogleCalendar = "google-calendar",
   GoogleDrive = "google-drive",
   Memory = "memory",
@@ -29,7 +29,7 @@ export enum Toolkits {
 export type ServerToolkitNames = {
   [Toolkits.Exa]: ExaTools;
   [Toolkits.Image]: ImageTools;
-  [Toolkits.Github]: GithubTools;
+  // [Toolkits.Github]: GithubTools;
   [Toolkits.GoogleCalendar]: GoogleCalendarTools;
   [Toolkits.GoogleDrive]: GoogleDriveTools;
   [Toolkits.Memory]: Mem0Tools;
@@ -40,7 +40,7 @@ export type ServerToolkitNames = {
 export type ServerToolkitParameters = {
   [Toolkits.Exa]: typeof exaParameters.shape;
   [Toolkits.Image]: typeof imageParameters.shape;
-  [Toolkits.Github]: typeof githubParameters.shape;
+  // [Toolkits.Github]: typeof githubParameters.shape;
   [Toolkits.GoogleCalendar]: typeof googleCalendarParameters.shape;
   [Toolkits.GoogleDrive]: typeof googleDriveParameters.shape;
   [Toolkits.Memory]: typeof mem0Parameters.shape;
