@@ -1,7 +1,7 @@
 import type { exaParameters } from "./exa/base";
 import type { ExaTools } from "./exa/tools/tools";
-import type { githubParameters } from "./github/base";
-import type { GithubTools } from "./github/tools";
+// import type { githubParameters } from "./github/base";
+// import type { GithubTools } from "./github/tools";
 import type { googleCalendarParameters } from "./google-calendar/base";
 import type { GoogleCalendarTools } from "./google-calendar/tools";
 import type { googleDriveParameters } from "./google-drive/base";

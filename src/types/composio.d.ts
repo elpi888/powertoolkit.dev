@@ -9,7 +9,7 @@ declare module 'composio' {
           type: "OAUTH2";
           redirectUrl: string;
         };
-      }): Promise<{ id: string; redirectUrl?: string | null; [key: string]: any }>;
+        }): Promise<{ id: string; redirectUrl?: string | null; [key: string]: unknown }>;
     };
     // Add other namespaces like 'toolkits', 'tools' if they are used directly.
   }
