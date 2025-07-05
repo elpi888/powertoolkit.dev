@@ -44,14 +44,28 @@ export async function POST(request: Request) {
           { status: 403 },
         );
       }
-    } catch (fetchError: any) {
+    } catch (fetchError: unknown) {
       // Handle cases where the connection might not be found by `get` (e.g., already deleted, invalid ID)
       console.error(`Error fetching connection ${connectedAccountId} for verification:`, fetchError);
-      // Distinguish between "not found" and other errors if SDK provides specific error types/codes
-      if (fetchError.status === 404 || fetchError.message?.toLowerCase().includes("not found")) {
-         return NextResponse.json({ error: "Connection not found." }, { status: 404 });
+
+      let errorMessage = "Failed to verify connection ownership.";
+      let errorStatus = 500;
+
+      if (typeof fetchError === 'object' && fetchError !== null) {
+        const status = (fetchError as any).status; // Potentially unsafe, but common for SDK errors
+        const message = (fetchError as any).message as string || "";
+
+        if (status === 404 || message.toLowerCase().includes("not found")) {
+          errorMessage = "Connection not found.";
+          errorStatus = 404;
+        }
+      } else if (fetchError instanceof Error) {
+        if (fetchError.message.toLowerCase().includes("not found")) {
+            errorMessage = "Connection not found.";
+            errorStatus = 404;
+        }
       }
-      return NextResponse.json({ error: "Failed to verify connection ownership." }, { status: 500 });
+      return NextResponse.json({ error: errorMessage }, { status: errorStatus });
     }
 
     // Step 2: Delete the connection using Composio v3 SDK
@@ -62,13 +76,26 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: "Account disconnected successfully." });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error disconnecting Composio v3 account:", error);
-    if (error instanceof Error && error.message.includes("API key")) {
-        return NextResponse.json({ error: "Composio API Key error." }, { status: 500 });
+    let finalErrorMessage = "Failed to disconnect account.";
+    if (error instanceof Error) {
+      if (error.message.includes("API key")) {
+        finalErrorMessage = "Composio API Key error.";
+      } else {
+        // You could choose to expose error.message directly if it's safe,
+        // or keep a generic message for other types of errors.
+        // finalErrorMessage = error.message;
+      }
     }
+    // Check for specific SDK error structures if Composio SDK throws custom errors with status codes
+    // else if (typeof error === 'object' && error !== null && 'status' in error && 'message' in error) {
+    //   finalErrorMessage = (error as any).message || finalErrorMessage;
+    //   return NextResponse.json({ error: finalErrorMessage }, { status: (error as any).status || 500 });
+    // }
+
     return NextResponse.json(
-      { error: "Failed to disconnect account." },
+      { error: finalErrorMessage },
       { status: 500 },
     );
   }

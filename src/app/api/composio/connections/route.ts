@@ -16,7 +16,7 @@ interface ComposioV3ConnectedAccount {
   created_at: string;
   updated_at: string;
   scopes?: string[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   // Any other fields returned by the v3 SDK's list method
 }
 
@@ -37,17 +37,14 @@ export async function GET() {
     });
 
     let rawConnections: ComposioV3ConnectedAccount[] = [];
-    if (Array.isArray(response)) {
+    // Refined response handling as per CodeRabbit suggestion
+    if (response && typeof response === 'object' && 'items' in response && Array.isArray(response.items)) {
+      rawConnections = response.items as ComposioV3ConnectedAccount[];
+    } else if (Array.isArray(response)) {
       rawConnections = response as ComposioV3ConnectedAccount[];
-    } else if (response && Array.isArray((response as any).items)) { // Common pattern for paginated/structured list responses
-      rawConnections = (response as any).items as ComposioV3ConnectedAccount[];
-    } else if (response && typeof response === 'object' && response !== null && !Array.isArray(response) && Object.keys(response).length > 0) {
-      // If it's a single object not in an array (less likely for a list method but possible)
-      // This case might need adjustment based on actual SDK behavior for a list.
-      // For now, assuming list returns an array or an object with an 'items' array.
-      console.warn("Composio v3 connections list response format unexpected (single object):", response);
     } else {
-        console.warn("Composio v3 connections list response format unexpected or empty:", response);
+      console.warn("Composio v3 connections list response format unexpected or empty:", response);
+      // rawConnections remains [], which is handled gracefully by the map below
     }
 
     const formattedConnections = rawConnections.map((conn) => ({
