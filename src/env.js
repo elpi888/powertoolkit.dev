@@ -50,6 +50,7 @@ export const env = createEnv({
     // Add Clerk server-side keys
     CLERK_SECRET_KEY: z.string().startsWith("sk_"),
     CLERK_WEBHOOK_SECRET: z.string().startsWith("whsec_").optional(), // Optional
+    COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID: z.string().min(1).optional(),
     // ...createAuthSchema(), // Removed
     ...createImageModelSchema(),
   },
@@ -81,6 +82,7 @@ export const env = createEnv({
     // Add Clerk keys to runtimeEnv
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
+    COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID: process.env.COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED: process.env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED,

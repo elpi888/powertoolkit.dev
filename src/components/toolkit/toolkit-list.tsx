@@ -54,6 +54,7 @@ export const ToolkitList: React.FC<ToolkitListProps> = ({
     });
   }, [useClerkAccounts, legacyToolkitsToHideWhenClerkActive]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const updatedToolkits = availableToolkits.filter(([id]) => {
       return (
@@ -72,7 +73,7 @@ export const ToolkitList: React.FC<ToolkitListProps> = ({
       });
       window.history.replaceState({}, "", pathname);
     }
-  }, [searchParams, onAddToolkit, selectedToolkits, router, pathname]);
+  }, [searchParams, onAddToolkit, selectedToolkits, router, pathname, availableToolkits]);
 
   return (
     <TooltipProvider>
