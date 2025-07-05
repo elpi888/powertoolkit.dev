@@ -6,7 +6,7 @@ import {
 } from "./shared";
 import { exaClientToolkit } from "./exa/client";
 import { imageClientToolkit } from "./image/client";
-import { githubClientToolkit } from "./github/client";
+// import { githubClientToolkit } from "./github/client";
 import { googleCalendarClientToolkit } from "./google-calendar/client";
 import { googleDriveClientToolkit } from "./google-drive/client";
 import { mem0ClientToolkit } from "./mem0/client";
@@ -25,7 +25,7 @@ export const clientToolkits: ClientToolkits = {
   [Toolkits.Memory]: mem0ClientToolkit,
   [Toolkits.Image]: imageClientToolkit,
   [Toolkits.Exa]: exaClientToolkit,
-  [Toolkits.Github]: githubClientToolkit,
+  // [Toolkits.Github]: githubClientToolkit,
   [Toolkits.GoogleCalendar]: googleCalendarClientToolkit,
   [Toolkits.Notion]: notionClientToolkit,
   [Toolkits.GoogleDrive]: googleDriveClientToolkit,
