@@ -54,15 +54,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // At this point, integrationId is guaranteed to be a string if no error was thrown above.
-    // However, to satisfy TypeScript if the check above was different, ensure it's treated as string.
-    // if (!integrationId) {
-    //   console.error(`Integration ID for service ${service} is not configured in environment variables.`);
-      return NextResponse.json(
-        { error: `Configuration error for service: ${service}` },
-        { status: 500 },
-      );
-    }
+    // At this point, integrationId is guaranteed to be a string because the checks above would have returned if not.
 
     const toolset = getComposioToolset();
 
