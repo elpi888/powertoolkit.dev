@@ -21,7 +21,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
     title: "Analyze Toolkit.dev",
     prompt:
       "Search GitHub for jasonhedman/toolkit.dev, analyze the repo, clone the repo and read the readme in a sandbox environment, and give me a getting started guide.",
-    toolkitIds: [Toolkits.Github, Toolkits.E2B, Toolkits.Exa],
+    toolkitIds: [Toolkits.E2B, Toolkits.Exa], // Removed Toolkits.Github
     description:
       "Complete React/Next.js analysis: repository discovery, component execution, architecture visualization, and pattern learning",
   },
