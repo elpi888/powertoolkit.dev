@@ -3,12 +3,11 @@ import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 
 import { env } from "@/env";
-import { getComposioToolset } from "@/lib/composio";
+import { getComposioClient } from "@/lib/composio"; // Updated import
 
 // Define the expected request body schema
 const initiateRequestSchema = z.object({
   service: z.string().min(1), // e.g., "google_calendar"
-  // We might add other params like specific scopes if needed later
 });
 
 export async function POST(request: Request) {
@@ -30,56 +29,63 @@ export async function POST(request: Request) {
 
     const { service } = validationResult.data;
 
-    const SERVICE_INTEGRATION_MAP: Record<string, string | undefined> = {
-      google_calendar: env.COMPOSIO_GOOGLE_CALENDAR_INTEGRATION_ID,
+    // Using new terminology: Auth Config ID
+    const SERVICE_AUTH_CONFIG_MAP: Record<string, string | undefined> = {
+      google_calendar: env.COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID,
       // Future services can be added here, e.g.:
-      // github: env.COMPOSIO_GITHUB_INTEGRATION_ID,
+      // github: env.COMPOSIO_GITHUB_AUTH_CONFIG_ID,
     };
 
-    const integrationId = SERVICE_INTEGRATION_MAP[service.toLowerCase()];
+    const authConfigId = SERVICE_AUTH_CONFIG_MAP[service.toLowerCase()];
 
-    if (!integrationId) {
-      // Check if the service key exists but the env variable is missing
-      if (service.toLowerCase() in SERVICE_INTEGRATION_MAP) {
-        console.error(`Integration ID for service ${service} is not configured in environment variables.`);
+    if (!authConfigId) {
+      if (service.toLowerCase() in SERVICE_AUTH_CONFIG_MAP) {
+        console.error(`Auth Config ID for service ${service} is not configured in environment variables.`);
         return NextResponse.json(
-          { error: `Configuration error for service: ${service}. Environment variable missing.` },
+          { error: `Configuration error for service: ${service}. Auth Config ID missing.` },
           { status: 500 },
         );
       }
-      // Service key itself is not in our map
       return NextResponse.json(
         { error: "Unsupported service provided." },
         { status: 400 },
       );
     }
 
-    // At this point, integrationId is guaranteed to be a string because the checks above would have returned if not.
+    const composio = getComposioClient(); // Use new client utility
 
-    const toolset = getComposioToolset();
+    // const appRedirectUrl = `${env.APP_URL}/account?tab=connected-accounts&composio_service=${service}&composio_status=pending_completion`;
+    // Based on v3 docs, redirectUrl for our app is likely configured in Composio dashboard per AuthConfig,
+    // or the SDK doesn't allow overriding it during initiate for the final user destination.
+    // The `initiate` call itself returns the URL the user should be sent to for the provider's OAuth.
 
-    // Construct the redirect URL for our app after Composio's own redirects
-    // The user will land here after authorizing (or failing to authorize) with the third-party
-    const appRedirectUrl = `${env.APP_URL}/account?tab=connected-accounts&composio_service=${service}`;
+    const connectionRequest = await composio.connected_accounts.initiate(
+      userId, // This is the `user_id` for Composio v3
+      authConfigId
+      // The v3 example `composio.connected_accounts.initiate(userId, linearAuthConfigId)` does not pass a third options object.
+    );
 
-    const connectedAccount = await toolset.connectedAccounts.initiate({
-      integrationId,
-      entityId: userId, // Use Clerk userId as entityId
-      redirectUrl: appRedirectUrl, // Optional: where user lands in our app after Composio's flow
-    });
+    // The v3 docs show `connRequest.redirectUrl` (this is Composio's URL for user to auth with provider)
+    // and `connRequest.id` (this is the connected_account_id, e.g. "ca_...")
+    // and `connRequest.waitForConnection()` (a method to poll for completion)
 
-    if (!connectedAccount.redirectUrl) {
-      console.error("Composio did not return a redirectUrl for OAuth flow.", { service, entityId: userId });
+    if (!connectionRequest.redirectUrl) {
+      console.error("Composio v3 SDK did not return a redirectUrl for the provider's OAuth flow.", { service, userId });
       return NextResponse.json(
-        { error: "Failed to initiate connection: No redirect URL from provider." },
+        { error: "Failed to initiate connection: No redirect URL from Composio." },
         { status: 500 },
       );
     }
 
-    return NextResponse.json({ redirectUrl: connectedAccount.redirectUrl });
+    // We might also want to return connectionRequest.id (the new connectedAccountId `ca_...`)
+    // if the frontend needs to track this specific pending connection.
+    return NextResponse.json({
+      redirectUrl: connectionRequest.redirectUrl,
+      pendingConnectedAccountId: connectionRequest.id // e.g., "ca_..."
+    });
 
   } catch (error) {
-    console.error("Error initiating Composio connection:", error);
+    console.error("Error initiating Composio v3 connection:", error);
     // Consider more specific error handling based on error types from Composio SDK
     if (error instanceof Error && error.message.includes("API key")) {
         return NextResponse.json({ error: "Composio API Key error." }, { status: 500 });

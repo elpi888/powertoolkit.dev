@@ -1,43 +1,27 @@
-import { OpenAIToolSet } from "composio-core";
+import { Composio } from "@composio/core";
 import { env } from "@/env";
 
-let toolset: OpenAIToolSet | null = null;
+let composioClient: Composio | null = null;
 
 /**
- * Returns a singleton instance of the Composio OpenAIToolSet.
- * Initializes the toolset with the API key from environment variables
+ * Returns a singleton instance of the Composio v3 client.
+ * Initializes the client with the API key from environment variables
  * if it hasn't been initialized yet.
  *
- * @returns {OpenAIToolSet} The initialized OpenAIToolSet instance.
+ * @returns {Composio} The initialized Composio client instance.
  * @throws {Error} If the COMPOSIO_API_KEY is not set in the environment variables.
  */
-export const getComposioToolset = (): OpenAIToolSet => {
+export const getComposioClient = (): Composio => {
   if (!env.COMPOSIO_API_KEY) {
     throw new Error(
       "COMPOSIO_API_KEY is not set in environment variables. Please ensure it is configured.",
     );
   }
 
-  if (!toolset) {
-    toolset = new OpenAIToolSet({ apiKey: env.COMPOSIO_API_KEY });
+  if (!composioClient) {
+    // According to new v3 docs, API key can be passed in constructor or SDK picks it from env.
+    // Explicitly passing it for clarity.
+    composioClient = new Composio({ apiKey: env.COMPOSIO_API_KEY });
   }
-  return toolset;
+  return composioClient;
 };
-
-// Optional: A more generic client if needed for non-toolset specific actions,
-// though OpenAIToolSet seems to provide access to .connectedAccounts etc.
-// For now, OpenAIToolSet should suffice based on documentation snippets.
-/*
-import { Composio } from "composio-core";
-let genericClient: Composio | null = null;
-
-export const getComposioClient = (): Composio => {
-  if (!env.COMPOSIO_API_KEY) {
-    throw new Error("COMPOSIO_API_KEY is not set.");
-  }
-  if (!genericClient) {
-    genericClient = new Composio({ apiKey: env.COMPOSIO_API_KEY });
-  }
-  return genericClient;
-};
-*/

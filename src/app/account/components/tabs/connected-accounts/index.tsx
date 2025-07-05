@@ -183,7 +183,7 @@ export const ConnectedAccounts = () => {
           <ul className="space-y-2">
             {connectedAccounts.map((acc) => (
               <li key={acc.connectedAccountId} className="flex items-center justify-between p-3 border rounded-md">
-                <HStack spacing={3}>
+                <HStack className="gap-3">
                   {acc.icon && <acc.icon className="w-5 h-5 text-muted-foreground" />}
                   <span>{acc.friendlyName || acc.appName}</span>
                   <Badge variant={acc.status === "ACTIVE" ? "default" : "secondary"}>
@@ -213,7 +213,7 @@ export const ConnectedAccounts = () => {
             .filter(service => !connectedAccounts.some(ca => ca.appName === service.id)) // Filter out already connected
             .map((service) => (
             <li key={service.id} className="flex items-center justify-between p-3 border rounded-md">
-              <HStack spacing={3}>
+              <HStack className="gap-3">
                 {service.icon && <service.icon className="w-5 h-5 text-muted-foreground" />}
                 <span>{service.name}</span>
               </HStack>
