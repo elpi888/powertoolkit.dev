@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     // Step 1: Verify ownership (important security step)
     // Fetch the connected account by its ID and check if its user_id matches the authenticated user.
     try {
-      const connectionToVerify = await composio.connected_accounts.get({
+      const connectionToVerify = await composio.connectedAccounts.get({ // Changed to camelCase
         connectedAccountId: connectedAccountId,
       });
 
@@ -51,26 +51,27 @@ export async function POST(request: Request) {
       let errorMessage = "Failed to verify connection ownership.";
       let errorStatus = 500;
 
-      if (typeof fetchError === 'object' && fetchError !== null) {
-        const status = (fetchError as any).status; // Potentially unsafe, but common for SDK errors
-        const message = (fetchError as any).message as string || "";
-
-        if (status === 404 || message.toLowerCase().includes("not found")) {
+      if (fetchError instanceof Error) {
+        if (fetchError.message.toLowerCase().includes("not found")) {
           errorMessage = "Connection not found.";
           errorStatus = 404;
         }
-      } else if (fetchError instanceof Error) {
-        if (fetchError.message.toLowerCase().includes("not found")) {
-            errorMessage = "Connection not found.";
-            errorStatus = 404;
+      } else if (typeof fetchError === 'object' && fetchError !== null && 'status' in fetchError) {
+        // Ensure 'status' and 'message' exist before trying to access them.
+        // Type assertion to a more specific anonymous type for clarity.
+        const errorWithStatus = fetchError as { status?: unknown; message?: unknown };
+        if (errorWithStatus.status === 404 ||
+            (typeof errorWithStatus.message === 'string' && errorWithStatus.message.toLowerCase().includes("not found"))) {
+          errorMessage = "Connection not found.";
+          errorStatus = 404;
         }
       }
       return NextResponse.json({ error: errorMessage }, { status: errorStatus });
     }
 
     // Step 2: Delete the connection using Composio v3 SDK
-    // Method: composio.connected_accounts.delete({ connectedAccountId })
-    await composio.connected_accounts.delete({
+    // Method: composio.connectedAccounts.delete({ connectedAccountId })
+    await composio.connectedAccounts.delete({ // Changed to camelCase
       connectedAccountId: connectedAccountId,
     });
 

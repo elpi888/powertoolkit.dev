@@ -29,10 +29,10 @@ export async function GET() {
 
     const composio = getComposioClient(); // Use new v3 client
 
-    // Using Composio v3 SDK method: composio.connected_accounts.list({ userId })
+    // Using Composio v3 SDK method: composio.connectedAccounts.list({ userId })
     // The response structure needs to be confirmed.
     // It might return an object like { items: ComposioV3ConnectedAccount[] } or an array directly.
-    const response = await composio.connected_accounts.list({
+    const response = await composio.connectedAccounts.list({ // Changed to camelCase
       userId: userId, // Pass the `userId` as per v3 docs
     });
 

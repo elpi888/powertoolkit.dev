@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     // or the SDK doesn't allow overriding it during initiate for the final user destination.
     // The `initiate` call itself returns the URL the user should be sent to for the provider's OAuth.
 
-    const connectionRequest = await composio.connected_accounts.initiate(
+    const connectionRequest = await composio.connectedAccounts.initiate( // Changed to camelCase
       userId, // This is the `user_id` for Composio v3
       authConfigId
       // The v3 example `composio.connected_accounts.initiate(userId, linearAuthConfigId)` does not pass a third options object.
