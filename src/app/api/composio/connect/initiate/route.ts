@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { AuthScheme } from "@composio/core"; // Import auth_scheme
+// Removed import { AuthScheme } from "@composio/core";
 
 import { env } from "@/env";
 import { getComposioClient } from "@/lib/composio";
@@ -61,9 +61,10 @@ export async function POST(request: Request) {
     const connectionRequest = await composio.connected_accounts.initiate({
       userId: userId,
       authConfigId: authConfigId,
-      config: AuthScheme.oauth2({ // Changed auth_scheme to AuthScheme
+      config: { // Updated config for V3 SDK
+        type: "OAUTH2",
         redirectUrl: ourAppCallbackUrl, // Our app's final destination for the user
-      }),
+      },
     });
 
     if (!connectionRequest.redirectUrl) {
