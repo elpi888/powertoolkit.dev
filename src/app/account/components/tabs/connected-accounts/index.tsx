@@ -28,7 +28,7 @@ export const ConnectedAccounts = () => {
       <p className="text-xs text-muted-foreground mt-4">
         Note: Connections to external tools and services for use within workbenches
         (like authorizing Google Calendar to access its data) are managed separately within
-        each workbench's settings.
+        each workbench&apos;s settings.
       </p>
     </div>
   );
