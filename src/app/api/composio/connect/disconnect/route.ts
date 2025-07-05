@@ -31,9 +31,7 @@ export async function POST(request: Request) {
     // Step 1: Verify ownership (important security step)
     // Fetch the connected account by its ID and check if its user_id matches the authenticated user.
     try {
-      const connectionToVerify = await composio.connectedAccounts.get({ // Changed to camelCase
-        connectedAccountId: connectedAccountId,
-      });
+      const connectionToVerify = await composio.connectedAccounts.get(connectedAccountId); // Pass ID directly
 
       if (!connectionToVerify || connectionToVerify.user_id !== userId) {
         console.warn(
@@ -70,10 +68,8 @@ export async function POST(request: Request) {
     }
 
     // Step 2: Delete the connection using Composio v3 SDK
-    // Method: composio.connectedAccounts.delete({ connectedAccountId })
-    await composio.connectedAccounts.delete({ // Changed to camelCase
-      connectedAccountId: connectedAccountId,
-    });
+    // Method: composio.connectedAccounts.delete(connectedAccountId)
+    await composio.connectedAccounts.delete(connectedAccountId); // Pass ID directly
 
     return NextResponse.json({ message: "Account disconnected successfully." });
 

@@ -72,7 +72,7 @@ export const ToolkitList: React.FC<ToolkitListProps> = ({
       });
       window.history.replaceState({}, "", pathname);
     }
-  }, [searchParams, onAddToolkit, selectedToolkits, router, pathname]);
+  }, [searchParams, onAddToolkit, selectedToolkits, pathname, availableToolkits]); // Removed router
 
   return (
     <TooltipProvider>
