@@ -29,42 +29,32 @@ export async function POST(request: Request) {
     const composio = getComposioClient(); // Use new v3 client
 
     // Step 1: Verify ownership (important security step)
-    // Fetch the connected account by its ID and check if its user_id matches the authenticated user.
+    // List all connections for the user and check if the target connectedAccountId is in that list.
     try {
-      const connectionToVerify = await composio.connectedAccounts.get(connectedAccountId); // Pass ID directly
+      const userConnectionsResponse = await composio.connectedAccounts.list({ userId: userId });
 
-      if (!connectionToVerify || connectionToVerify.user_id !== userId) {
+      let userConnections: { id: string }[] = []; // Assuming a minimal interface for the check
+      if (Array.isArray(userConnectionsResponse)) {
+        userConnections = userConnectionsResponse as { id: string }[];
+      } else if (userConnectionsResponse && typeof userConnectionsResponse === 'object' && 'items' in userConnectionsResponse && Array.isArray(userConnectionsResponse.items)) {
+        userConnections = userConnectionsResponse.items as { id: string }[];
+      }
+
+      const connectionToDisconnect = userConnections.find(conn => conn.id === connectedAccountId);
+
+      if (!connectionToDisconnect) {
         console.warn(
-          `User ${userId} attempt to disconnect account ${connectedAccountId} not owned by them or not found.`,
+          `User ${userId} attempt to disconnect account ${connectedAccountId} which they do not own or does not exist for them.`,
         );
         return NextResponse.json(
           { error: "Permission denied or connection not found." },
-          { status: 403 },
+          { status: 403 }, // Or 404 if we are sure it doesn't exist at all
         );
       }
-    } catch (fetchError: unknown) {
-      // Handle cases where the connection might not be found by `get` (e.g., already deleted, invalid ID)
-      console.error(`Error fetching connection ${connectedAccountId} for verification:`, fetchError);
-
-      let errorMessage = "Failed to verify connection ownership.";
-      let errorStatus = 500;
-
-      if (fetchError instanceof Error) {
-        if (fetchError.message.toLowerCase().includes("not found")) {
-          errorMessage = "Connection not found.";
-          errorStatus = 404;
-        }
-      } else if (typeof fetchError === 'object' && fetchError !== null && 'status' in fetchError) {
-        // Ensure 'status' and 'message' exist before trying to access them.
-        // Type assertion to a more specific anonymous type for clarity.
-        const errorWithStatus = fetchError as { status?: unknown; message?: unknown };
-        if (errorWithStatus.status === 404 ||
-            (typeof errorWithStatus.message === 'string' && errorWithStatus.message.toLowerCase().includes("not found"))) {
-          errorMessage = "Connection not found.";
-          errorStatus = 404;
-        }
-      }
-      return NextResponse.json({ error: errorMessage }, { status: errorStatus });
+      // If found, ownership is verified.
+    } catch (listError: unknown) {
+      console.error(`Error listing connections for user ${userId} during disconnect verification:`, listError);
+      return NextResponse.json({ error: "Failed to verify connection ownership due to a server error." }, { status: 500 });
     }
 
     // Step 2: Delete the connection using Composio v3 SDK
