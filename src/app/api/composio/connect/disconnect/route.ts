@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     // Step 1: Verify ownership (important security step)
     // List all connections for the user and check if the target connectedAccountId is in that list.
     try {
-      const userConnectionsResponse = await composio.connectedAccounts.list({ userId: userId });
+      const userConnectionsResponse = await composio.connectedAccounts.list({ userIds: [userId] }); // Changed to userIds: [userId]
 
       let userConnections: { id: string }[] = []; // Assuming a minimal interface for the check
       if (Array.isArray(userConnectionsResponse)) {

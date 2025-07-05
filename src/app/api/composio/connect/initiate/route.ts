@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
+import { auth_scheme } from "@composio/core"; // Import auth_scheme
 
 import { env } from "@/env";
-import { getComposioClient } from "@/lib/composio"; // Updated import
+import { getComposioClient } from "@/lib/composio";
 
 // Define the expected request body schema
 const initiateRequestSchema = z.object({
@@ -12,7 +13,7 @@ const initiateRequestSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth(); // Added await
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -29,11 +30,8 @@ export async function POST(request: Request) {
 
     const { service } = validationResult.data;
 
-    // Using new terminology: Auth Config ID
     const SERVICE_AUTH_CONFIG_MAP: Record<string, string | undefined> = {
       google_calendar: env.COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID,
-      // Future services can be added here, e.g.:
-      // github: env.COMPOSIO_GITHUB_AUTH_CONFIG_ID,
     };
 
     const authConfigId = SERVICE_AUTH_CONFIG_MAP[service.toLowerCase()];
@@ -52,22 +50,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const composio = getComposioClient(); // Use new client utility
+    const composio = getComposioClient();
 
-    // const appRedirectUrl = `${env.APP_URL}/account?tab=connected-accounts&composio_service=${service}&composio_status=pending_completion`;
-    // Based on v3 docs, redirectUrl for our app is likely configured in Composio dashboard per AuthConfig,
-    // or the SDK doesn't allow overriding it during initiate for the final user destination.
-    // The `initiate` call itself returns the URL the user should be sent to for the provider's OAuth.
+    // This is the URL in our app where the user should land after the entire OAuth flow.
+    const ourAppCallbackUrl = `${env.APP_URL}/workbench/settings?composio_service=${service}&composio_status=pending_completion`;
+    // Assuming workbench settings is where they'll return. Adjust if needed.
+    // Or, more generically: `${env.APP_URL}/composio/callback?service=${service}` if we want a dedicated callback handler page.
+    // For now, sending them back to a generic workbench/account area with query params.
 
-    const connectionRequest = await composio.connectedAccounts.initiate( // Changed to camelCase
-      userId, // This is the `user_id` for Composio v3
-      authConfigId
-      // The v3 example `composio.connected_accounts.initiate(userId, linearAuthConfigId)` does not pass a third options object.
-    );
-
-    // The v3 docs show `connRequest.redirectUrl` (this is Composio's URL for user to auth with provider)
-    // and `connRequest.id` (this is the connected_account_id, e.g. "ca_...")
-    // and `connRequest.waitForConnection()` (a method to poll for completion)
+    const connectionRequest = await composio.connected_accounts.initiate({
+      userId: userId,
+      authConfigId: authConfigId,
+      config: auth_scheme.oauth2({
+        redirectUrl: ourAppCallbackUrl, // Our app's final destination for the user
+      }),
+    });
 
     if (!connectionRequest.redirectUrl) {
       console.error("Composio v3 SDK did not return a redirectUrl for the provider's OAuth flow.", { service, userId });
@@ -77,11 +74,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // We might also want to return connectionRequest.id (the new connectedAccountId `ca_...`)
-    // if the frontend needs to track this specific pending connection.
     return NextResponse.json({
-      redirectUrl: connectionRequest.redirectUrl,
-      pendingConnectedAccountId: connectionRequest.id // e.g., "ca_..."
+      redirectUrl: connectionRequest.redirectUrl, // This is Composio's URL to send the user to the provider
+      pendingConnectedAccountId: connectionRequest.id
     });
 
   } catch (error) {
