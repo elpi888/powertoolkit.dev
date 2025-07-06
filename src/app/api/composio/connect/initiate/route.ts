@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { auth_scheme } from "@composio/core"; // Import auth_scheme
+import { AuthScheme } from "@composio/core"; // Import AuthScheme
 import { env } from "@/env";
 import { getComposioClient } from "@/lib/composio";
 
