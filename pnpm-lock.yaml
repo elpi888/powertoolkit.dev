@@ -140,9 +140,6 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
-      dotenv:
-        specifier: ^17.0.1
-        version: 17.0.1
       exa-js:
         specifier: ^1.8.8
         version: 1.8.8(encoding@0.1.13)(ws@8.18.3)(zod@3.25.56)
@@ -2685,10 +2682,6 @@ packages:
 
   dotenv@16.4.7:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
-    engines: {node: '>=12'}
-
-  dotenv@17.0.1:
-    resolution: {integrity: sha512-GLjkduuAL7IMJg/ZnOPm9AnWKJ82mSE2tzXLaJ/6hD6DhwGfZaXG77oB8qbReyiczNxnbxQKyh0OE5mXq0bAHA==}
     engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
@@ -7758,8 +7751,6 @@ snapshots:
       tslib: 2.8.1
 
   dotenv@16.4.7: {}
-
-  dotenv@17.0.1: {}
 
   dunder-proto@1.0.1:
     dependencies:

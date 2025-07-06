@@ -36,14 +36,14 @@ export const ToolkitList: React.FC<ToolkitListProps> = ({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const useClerkAccounts = useMemo(() => env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED, []);
+  const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
 
-  const legacyToolkitsToHideWhenClerkActive: Toolkits[] = useMemo(() => [
+  const legacyToolkitsToHideWhenClerkActive: Toolkits[] = [
     Toolkits.Github,
     Toolkits.GoogleCalendar,
     Toolkits.Notion,
     Toolkits.GoogleDrive,
-  ], []);
+  ];
 
   const availableToolkits = useMemo(() => {
     return Object.entries(clientToolkits).filter(([id]) => {
@@ -54,7 +54,6 @@ export const ToolkitList: React.FC<ToolkitListProps> = ({
     });
   }, [useClerkAccounts, legacyToolkitsToHideWhenClerkActive]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const updatedToolkits = availableToolkits.filter(([id]) => {
       return (
