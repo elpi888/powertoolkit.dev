@@ -7,17 +7,17 @@ import { getComposioClient } from "@/lib/composio"; // Updated import
 // For now, let's define a placeholder and adjust if a type is found in SDK.
 // import type { ConnectedAccount } from "@composio/core/types"; // Hypothetical path
 
+// Interface adjusted to match the actual structure indicated by the Vercel type error
 interface ComposioV3ConnectedAccount {
-  id: string; // nanoId, e.g., "ca_..."
-  auth_config_id: string; // e.g., "ac_..."
-  user_id: string;
-  status: "ACTIVE" | "INACTIVE" | "EXPIRED" | "ERROR" | "PENDING" | "INITIATED"; // Common statuses
-  toolkit_id?: string; // The new term for "App" or "Service" identifier like 'google_calendar'
-  created_at: string;
-  updated_at: string;
-  scopes?: string[];
-  metadata?: Record<string, unknown>;
-  // Any other fields returned by the v3 SDK's list method
+  id: string;
+  status: "ACTIVE" | "EXPIRED" | "INITIATED" | "INITIALIZING" | "FAILED"; // As per error
+  toolkit: { slug: string }; // As per error (actual type has toolkit.slug)
+  data: Record<string, unknown>; // As per error (actual type has data)
+  createdAt: string; // As per error (camelCase)
+  updatedAt: string; // As per error (camelCase)
+  authConfig: { id: string; [key: string]: any }; // As per error (actual type has authConfig.id for auth_config_id)
+  // user_id is not directly on items if list is filtered by user, contextually it's `userId` from auth()
+  // scopes also not mentioned in the error's depiction of the actual item structure
 }
 
 export async function GET() {
@@ -52,9 +52,9 @@ export async function GET() {
       // `appName` for the frontend needs to be derived.
       // `toolkit_id` is the new field that likely represents the service (e.g., 'google_calendar').
       // The frontend will map this toolkit_id to a friendly name and icon.
-      appName: conn.toolkit_id || conn.auth_config_id, // Use toolkit_id if available, else auth_config_id as fallback
+      appName: conn.toolkit?.slug || conn.authConfig?.id, // Use slug from toolkit object, or id from authConfig
       status: conn.status,
-      authConfigId: conn.auth_config_id, // Pass this along if needed by frontend/disconnect
+      authConfigId: conn.authConfig?.id, // Use id from authConfig object
     }));
 
     return NextResponse.json(formattedConnections);
