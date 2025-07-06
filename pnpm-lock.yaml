@@ -35,6 +35,9 @@ importers:
       '@composio/core':
         specifier: 0.1.36-next.7
         version: 0.1.36-next.7(encoding@0.1.13)(ws@8.18.3)
+      '@composio/vercel':
+        specifier: ^0.1.35
+        version: 0.1.35(@composio/core@0.1.36-next.7(encoding@0.1.13)(ws@8.18.3))(ai@4.3.16(react@19.1.0)(zod@3.25.56))
       '@e2b/code-interpreter':
         specifier: ^1.5.1
         version: 1.5.1
@@ -425,6 +428,12 @@ packages:
 
   '@composio/json-schema-to-zod@0.1.10-next.3':
     resolution: {integrity: sha512-kglZdteq+18Tcikb1US7D47VX3A3x8haeE+qFCwpQbBAgp3vG+eMQnZ6WgMkLNroZNrTm5oiAJrSdjerbiAqIA==}
+
+  '@composio/vercel@0.1.35':
+    resolution: {integrity: sha512-/ESyatjURRMc4CKBjRU1e+6LVO8vCdfP2B9inlLqkKuN/3Q0ny4yEUm8VECVX1M2bPeACdF5Ntqe0Y1RAuD7tA==}
+    peerDependencies:
+      '@composio/core': 0.1.35
+      ai: ^4.3.8
 
   '@connectrpc/connect-web@2.0.0-rc.3':
     resolution: {integrity: sha512-w88P8Lsn5CCsA7MFRl2e6oLY4J/5toiNtJns/YJrlyQaWOy3RO8pDgkz+iIkG98RPMhj2thuBvsd3Cn4DKKCkw==}
@@ -5550,6 +5559,11 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       zod: 3.25.67
+
+  '@composio/vercel@0.1.35(@composio/core@0.1.36-next.7(encoding@0.1.13)(ws@8.18.3))(ai@4.3.16(react@19.1.0)(zod@3.25.56))':
+    dependencies:
+      '@composio/core': 0.1.36-next.7(encoding@0.1.13)(ws@8.18.3)
+      ai: 4.3.16(react@19.1.0)(zod@3.25.56)
 
   '@connectrpc/connect-web@2.0.0-rc.3(@bufbuild/protobuf@2.5.2)(@connectrpc/connect@2.0.0-rc.3(@bufbuild/protobuf@2.5.2))':
     dependencies:
