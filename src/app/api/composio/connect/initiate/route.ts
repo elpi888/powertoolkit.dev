@@ -58,10 +58,8 @@ export async function POST(request: Request) {
     // For now, sending them back to a generic workbench/account area with query params.
 
     const connectionRequest = await composio.connectedAccounts.initiate(
-      {
-        userId: userId,
-        authConfigId: authConfigId,
-      },
+      userId,
+      authConfigId,
       ourAppCallbackUrl,
     );
 
