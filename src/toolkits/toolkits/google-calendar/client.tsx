@@ -40,49 +40,8 @@ export const googleCalendarClientToolkit = createClientToolkit(
     addToolkitWrapper: ({ children }) => {
       const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
 
-      // Common: Check for feature access first
-      const { data: hasFeatureAccess, isLoading: isLoadingFeatureAccess } =
-        api.features.hasFeature.useQuery({ feature: "google-calendar" });
-
-      if (isLoadingFeatureAccess) {
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled
-            className="bg-transparent"
-          >
-            <Loader2 className="size-4 animate-spin" />
-          </Button>
-        );
-      }
-
-      if (!hasFeatureAccess) {
-        return (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <Badge variant="outline">Private Beta</Badge>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs text-center">
-                We need to add you as a test user on Google Cloud for us to
-                request sensitive OAuth scopes. <br />
-                <br /> Please contact{" "}
-                <Link
-                  href="https://x.com/jsonhedman"
-                  target="_blank"
-                  className="underline"
-                >
-                  @jsonhedman
-                </Link>{" "}
-                on X to request access.
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        );
-      }
-
       // Feature access is granted, now handle Clerk vs Legacy
+      // Removed feature flag check for "Private Beta"
       if (useClerkAccounts) {
         const { user, isLoaded: isUserLoaded } = useUser();
 

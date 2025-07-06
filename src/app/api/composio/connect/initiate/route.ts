@@ -32,6 +32,10 @@ export async function POST(request: Request) {
 
     const SERVICE_AUTH_CONFIG_MAP: Record<string, string | undefined> = {
       google_calendar: env.COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID,
+      notion: env.COMPOSIO_NOTION_AUTH_CONFIG_ID,
+      google_drive: env.COMPOSIO_GOOGLE_DRIVE_AUTH_CONFIG_ID,
+      github: env.COMPOSIO_GITHUB_AUTH_CONFIG_ID,
+      // exa: env.COMPOSIO_EXA_AUTH_CONFIG_ID, // Assuming Exa might use a different flow or direct API key
     };
 
     const authConfigId = SERVICE_AUTH_CONFIG_MAP[service.toLowerCase()];
