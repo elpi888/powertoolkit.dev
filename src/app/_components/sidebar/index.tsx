@@ -48,7 +48,7 @@ export async function AppSidebar({
             <HStack className="items-center group-data-[collapsible=icon]:justify-center">
               <Logo className="size-6 group-data-[collapsible=icon]:mx-auto" />
               <h1 className="shimmer-text overflow-hidden text-xl font-bold whitespace-nowrap group-data-[collapsible=icon]:hidden">
-                Toolkit.dev
+                My Team AI
               </h1>
             </HStack>
           </Link>

@@ -32,6 +32,9 @@ importers:
       '@clerk/nextjs':
         specifier: ^6.23.2
         version: 6.23.2(next@15.3.3(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@composio/core':
+        specifier: 0.1.36-next.7
+        version: 0.1.36-next.7(encoding@0.1.13)(ws@8.18.3)
       '@e2b/code-interpreter':
         specifier: ^1.5.1
         version: 1.5.1
@@ -413,6 +416,15 @@ packages:
 
   '@cloudflare/workers-types@4.20250614.0':
     resolution: {integrity: sha512-a2r9Yamj+7YlXUeGbnpwZdxGyTx1rMyLdt2xtzk46HgpGq3QV8ka8s3B+tB4OzDPXH9x5TmplwlO9vTJkCXG1w==}
+
+  '@composio/client@0.1.0-alpha.26':
+    resolution: {integrity: sha512-6cLf8sABDe0tjG4U33GDd3ZS4S3YdVCEpFyi9bt22vanqtNKJk8wNEOFOui9TgI131B45Tt/XtlCeCR+PpxQLQ==}
+
+  '@composio/core@0.1.36-next.7':
+    resolution: {integrity: sha512-MqwYKBIoCMn9VegS67UO/RkO/C5L7aA0r28K7VbIS4ZwMY/9/hl7UPqat7EZapyhpLFw4OaTHeAjAMcu6dRm1g==}
+
+  '@composio/json-schema-to-zod@0.1.10-next.3':
+    resolution: {integrity: sha512-kglZdteq+18Tcikb1US7D47VX3A3x8haeE+qFCwpQbBAgp3vG+eMQnZ6WgMkLNroZNrTm5oiAJrSdjerbiAqIA==}
 
   '@connectrpc/connect-web@2.0.0-rc.3':
     resolution: {integrity: sha512-w88P8Lsn5CCsA7MFRl2e6oLY4J/5toiNtJns/YJrlyQaWOy3RO8pDgkz+iIkG98RPMhj2thuBvsd3Cn4DKKCkw==}
@@ -4542,6 +4554,9 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
+  pusher-js@8.4.0:
+    resolution: {integrity: sha512-wp3HqIIUc1GRyu1XrP6m2dgyE9MoCsXVsWNlohj0rjSkLf+a0jLvEyVubdg58oMk7bhjBWnFClgp8jfAa6Ak4Q==}
+
   qs@6.14.0:
     resolution: {integrity: sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==}
     engines: {node: '>=0.6'}
@@ -5086,6 +5101,9 @@ packages:
   tw-animate-css@1.3.4:
     resolution: {integrity: sha512-dd1Ht6/YQHcNbq0znIT6dG8uhO7Ce+VIIhZUhjsryXsMPJQz3bZg7Q2eNzLwipb25bRZslGb2myio5mScd1TFg==}
 
+  tweetnacl@1.0.3:
+    resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
+
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
@@ -5232,6 +5250,10 @@ packages:
 
   uuid@10.0.0:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
+    hasBin: true
+
+  uuid@11.1.0:
+    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
     hasBin: true
 
   uuid@9.0.1:
@@ -5505,6 +5527,29 @@ snapshots:
       csstype: 3.1.3
 
   '@cloudflare/workers-types@4.20250614.0': {}
+
+  '@composio/client@0.1.0-alpha.26': {}
+
+  '@composio/core@0.1.36-next.7(encoding@0.1.13)(ws@8.18.3)':
+    dependencies:
+      '@composio/client': 0.1.0-alpha.26
+      '@composio/json-schema-to-zod': 0.1.10-next.3
+      '@types/json-schema': 7.0.15
+      chalk: 4.1.2
+      openai: 4.104.0(encoding@0.1.13)(ws@8.18.3)(zod@3.25.67)
+      pusher-js: 8.4.0
+      semver: 7.7.2
+      uuid: 11.1.0
+      zod: 3.25.67
+      zod-to-json-schema: 3.24.6(zod@3.25.67)
+    transitivePeerDependencies:
+      - encoding
+      - ws
+
+  '@composio/json-schema-to-zod@0.1.10-next.3':
+    dependencies:
+      '@types/json-schema': 7.0.15
+      zod: 3.25.67
 
   '@connectrpc/connect-web@2.0.0-rc.3(@bufbuild/protobuf@2.5.2)(@connectrpc/connect@2.0.0-rc.3(@bufbuild/protobuf@2.5.2))':
     dependencies:
@@ -9830,6 +9875,21 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
+  openai@4.104.0(encoding@0.1.13)(ws@8.18.3)(zod@3.25.67):
+    dependencies:
+      '@types/node': 18.19.111
+      '@types/node-fetch': 2.6.12
+      abort-controller: 3.0.0
+      agentkeepalive: 4.6.0
+      form-data-encoder: 1.7.2
+      formdata-node: 4.4.1
+      node-fetch: 2.7.0(encoding@0.1.13)
+    optionalDependencies:
+      ws: 8.18.3
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - encoding
+
   openai@5.3.0(ws@8.18.3)(zod@3.25.56):
     optionalDependencies:
       ws: 8.18.3
@@ -10096,6 +10156,10 @@ snapshots:
       once: 1.4.0
 
   punycode@2.3.1: {}
+
+  pusher-js@8.4.0:
+    dependencies:
+      tweetnacl: 1.0.3
 
   qs@6.14.0:
     dependencies:
@@ -10835,6 +10899,8 @@ snapshots:
 
   tw-animate-css@1.3.4: {}
 
+  tweetnacl@1.0.3: {}
+
   type-check@0.4.0:
     dependencies:
       prelude-ls: 1.2.1
@@ -11030,6 +11096,8 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   uuid@10.0.0: {}
+
+  uuid@11.1.0: {}
 
   uuid@9.0.1: {}
 

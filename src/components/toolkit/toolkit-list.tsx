@@ -74,7 +74,6 @@ export const ToolkitList: React.FC<ToolkitListProps> = ({
       });
       window.history.replaceState({}, "", pathname);
     }
-  }, [searchParams, onAddToolkit, selectedToolkits, router, pathname, availableToolkits]);
 
   return (
     <TooltipProvider>

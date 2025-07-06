@@ -1,77 +1,35 @@
-// import { AuthProviderIcon } from "@/app/_components/navbar/account-button"; // Removed usage
-import { Badge } from "@/components/ui/badge";
-import { HStack } from "@/components/ui/stack";
-// import { providers } from "@/server/auth/providers"; // Removed
-import { api } from "@/trpc/server";
-import { DisconnectButton } from "./connect-disconnect"; // ConnectButton removed
-import { env } from "@/env";
+// This tab clarifies that login methods (e.g., social logins via Clerk)
+// are managed in the main User Profile provided by Clerk.
+// It no longer handles any "legacy" connections or tool integrations.
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import type { inferRouterOutputs } from "@trpc/server"; // For tRPC type inference
-import type { AppRouter } from "@/server/api/root"; // Root AppRouter type
+import { Info } from "lucide-react"; // Using an icon for visual cue
 
-// Infer the output type of the getAccounts procedure
-type RouterOutput = inferRouterOutputs<AppRouter>;
-type PrismaAccount = RouterOutput['accounts']['getAccounts']['items'][number];
-
-export const ConnectedAccounts = async () => {
-  const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
-
-  if (useClerkAccounts) {
-    return (
-      <div className="flex flex-col gap-2">
-        <p className="text-muted-foreground mb-2">
-          Connected accounts are now managed through your Clerk user profile.
-        </p>
-        <Link href="/user-profile#connected-accounts" target="_blank" rel="noopener noreferrer">
-          <Button variant="outline">Manage Connections in Profile</Button>
-        </Link>
-      </div>
-    );
-  }
-
-  // Legacy path (useClerkAccounts is false)
-  const accountsData = await api.accounts.getAccounts({ limit: 100 });
-  const legacyAccounts = accountsData?.items ?? [];
-
-  if (legacyAccounts.length === 0) {
-    return (
-      <div className="flex flex-col gap-2">
-        <p className="text-muted-foreground">No legacy accounts connected.</p>
-        <p className="text-sm text-muted-foreground mt-2">
-          You can manage new connections through your user profile.
-        </p>
-        <Link href="/user-profile#connected-accounts" target="_blank" rel="noopener noreferrer" className="mt-1">
-          <Button variant="outline" size="sm">Manage Connections in Profile</Button>
-        </Link>
-      </div>
-    );
-  }
-
+export const ConnectedAccounts = () => {
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-sm text-muted-foreground mb-2">
-        The following are previously connected accounts. Please manage all connections via your user profile going forward.
+    <div className="flex flex-col gap-3 rounded-lg border p-4 md:p-6">
+      <div className="flex items-center gap-2">
+        <Info className="h-5 w-5 text-muted-foreground" />
+        <h3 className="text-lg font-medium">Login Connections</h3>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        To manage how you log in to this application, such as linking or unlinking
+        social accounts (e.g., Google, GitHub for login purposes) or managing your
+        password, please visit your main User Profile.
       </p>
-      {legacyAccounts.map((account: PrismaAccount) => (
-        <HStack
-          key={account.id}
-          className="w-full justify-between rounded-md border px-4 py-2"
-        >
-          <HStack className="gap-4">
-             {/* <AuthProviderIcon provider={account.provider} /> Usage Removed */}
-            <HStack className="gap-2">
-              {/* Capitalize first letter for display */}
-              <h2 className="font-medium">{account.provider.charAt(0).toUpperCase() + account.provider.slice(1)}</h2>
-              <Badge variant="outline">Legacy Connection</Badge>
-            </HStack>
-          </HStack>
-          <DisconnectButton accountId={account.id} />
-        </HStack>
-      ))}
-       <Link href="/user-profile#connected-accounts" target="_blank" rel="noopener noreferrer" className="mt-2">
-          <Button variant="outline" size="sm">Manage All Connections in Profile</Button>
+      <div className="mt-2">
+        <Link href="/user-profile" passHref>
+          <Button variant="outline">
+            Go to User Profile
+          </Button>
         </Link>
+      </div>
+      <p className="text-xs text-muted-foreground mt-4">
+        Note: Connections to external tools and services for use within workbenches
+        (like authorizing Google Calendar to access its data) are managed separately within
+        each workbench&apos;s settings.
+      </p>
     </div>
   );
 };

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
-// Removed import { AuthScheme } from "@composio/core";
-
+import { auth_scheme } from "@composio/core"; // Import auth_scheme
 import { env } from "@/env";
 import { getComposioClient } from "@/lib/composio";
 
@@ -32,10 +31,6 @@ export async function POST(request: Request) {
 
     const SERVICE_AUTH_CONFIG_MAP: Record<string, string | undefined> = {
       google_calendar: env.COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID,
-      notion: env.COMPOSIO_NOTION_AUTH_CONFIG_ID,
-      google_drive: env.COMPOSIO_GOOGLE_DRIVE_AUTH_CONFIG_ID,
-      github: env.COMPOSIO_GITHUB_AUTH_CONFIG_ID,
-      exa: env.COMPOSIO_EXA_AUTH_CONFIG_ID,
     };
 
     const authConfigId = SERVICE_AUTH_CONFIG_MAP[service.toLowerCase()];
@@ -65,10 +60,6 @@ export async function POST(request: Request) {
     const connectionRequest = await composio.connected_accounts.initiate({
       userId: userId,
       authConfigId: authConfigId,
-      config: { // Updated config for V3 SDK
-        type: "OAUTH2",
-        redirectUrl: ourAppCallbackUrl, // Our app's final destination for the user
-      },
     });
 
     if (!connectionRequest.redirectUrl) {

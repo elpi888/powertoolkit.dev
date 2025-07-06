@@ -26,6 +26,7 @@ export const githubClientToolkit = createClientToolkit(
     // eslint-disable-next-line react-hooks/rules-of-hooks
     addToolkitWrapper: ({ children }) => {
       const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       const { user, isLoaded: isUserLoaded } = useUser();
 
       if (useClerkAccounts) {

@@ -13,7 +13,7 @@ export default function SignUpPage() {
         <Logo className="size-16" />
         <VStack className="gap-1">
           <h1 className="text-primary text-2xl font-bold text-center">
-            Create your Toolkit.dev Account
+            Create your My Team AI Account
           </h1>
         </VStack>
       </VStack>
