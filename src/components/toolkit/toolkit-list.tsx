@@ -74,6 +74,7 @@ export const ToolkitList: React.FC<ToolkitListProps> = ({
       });
       window.history.replaceState({}, "", pathname);
     }
+  }, [availableToolkits, searchParams, selectedToolkits, onAddToolkit, pathname]); // Added missing dependencies and closed the useEffect hook
 
   return (
     <TooltipProvider>
