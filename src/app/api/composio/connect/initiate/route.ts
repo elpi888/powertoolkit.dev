@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const connectionRequest = await composio.connectedAccounts.initiate(
       userId,
       authConfigId,
-      ourAppCallbackUrl,
+      // ourAppCallbackUrl, // Temporarily removing based on VercelProvider context
     );
 
     if (!connectionRequest.redirectUrl) {
