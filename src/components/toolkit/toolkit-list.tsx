@@ -107,7 +107,6 @@ export const ToolkitList: React.FC<ToolkitListProps> = ({
       </VStack>
     </TooltipProvider>
   );
-};
 
 interface ToolkitItemProps {
   id: Toolkits;
