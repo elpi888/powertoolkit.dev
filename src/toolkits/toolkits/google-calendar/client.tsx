@@ -28,8 +28,6 @@ import { Toolkits } from "../shared";
 // import { useMemo } from "react"; // No longer used
 // import { useUser } from "@clerk/nextjs"; // No longer needed by wrapper
 
-// const calendarScope = "https://www.googleapis.com/auth/calendar"; // No longer used by wrapper
-
 export const googleCalendarClientToolkit = createClientToolkit(
   baseGoogleCalendarToolkitConfig,
   {
@@ -37,8 +35,6 @@ export const googleCalendarClientToolkit = createClientToolkit(
     description: "Find availability and schedule meetings",
     icon: SiGooglecalendar,
     form: null,
-    // Simplified addToolkitWrapper: Assumes not private beta and no Clerk connection logic here.
-    // Allows ToolkitItem to handle button display (e.g., "Connect" for OAuth via Composio).
     addToolkitWrapper: ({ children }) => {
       return children;
     },
