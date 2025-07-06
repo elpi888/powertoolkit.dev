@@ -37,44 +37,45 @@ export const googleDriveClientToolkit = createClientToolkit(
     addToolkitWrapper: ({ children }) => {
       const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
 
-      // Feature access is granted, now handle Clerk for account checks
-      // Removed feature flag check for "Private Beta"
       if (useClerkAccounts) {
         const { user, isLoaded: isUserLoaded } = useUser();
 
         if (!isUserLoaded) {
-          return ( // Clerk User loading
+          return (
             <Button variant="outline" size="sm" disabled className="bg-transparent">
-              <Loader2 className="size-4 animate-spin" />
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              Loading...
             </Button>
           );
         }
 
         const googleAccount = user?.externalAccounts?.find(
-          (acc) => (acc.provider as string) === "oauth_google" // Assuming "oauth_google" for Drive as well
+          (acc) => (acc.provider as string) === "oauth_google"
         );
 
         if (!googleAccount) {
-          // User has not connected their Google account via Clerk
-          return null;
+          return (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/user-profile">Connect Google</Link>
+            </Button>
+          );
         }
 
         const currentScopes = googleAccount.approvedScopes ?? "";
         const hasDriveScopeAccess = currentScopes.split(' ').includes(driveScope);
 
         if (!hasDriveScopeAccess) {
-          // User has connected Google, but not with the required Drive scope
-          return null;
+          return (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/user-profile">Grant Scope</Link>
+            </Button>
+          );
         }
-
-        return children; // All checks passed for Clerk
+        // All Clerk checks passed, render children
+        return children;
       }
-
-      // If useClerkAccounts is false (i.e., env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED is false),
-      // this toolkit component cannot perform its Clerk-based connection checks.
-      // Since Clerk is the sole auth provider, this state implies a misconfiguration.
-      // Return null to prevent rendering the toolkit UI.
-      return null;
+      // Fallback or non-Clerk path
+      return children;
     },
     type: ToolkitGroups.KnowledgeBase,
   },

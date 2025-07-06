@@ -8,27 +8,27 @@ import {
   googleCalendarGetEventToolConfigClient,
   googleCalendarSearchEventsToolConfigClient,
 } from "./tools/client";
-import { api } from "@/trpc/react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+// import { api } from "@/trpc/react"; // No longer needed if Private Beta check removed
+// import { Button } from "@/components/ui/button"; // No longer needed by wrapper
+// import { Badge } from "@/components/ui/badge"; // No longer needed by wrapper
 // import { signIn } from "next-auth/react"; // Removed: Clerk handles connections
-import { Loader2 } from "lucide-react";
+// import { Loader2 } from "lucide-react"; // No longer needed by wrapper
 // import { toast } from "sonner"; // No longer used
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import Link from "next/link";
+// import {
+//   Tooltip,
+//   TooltipContent,
+//   TooltipProvider,
+//   TooltipTrigger,
+// } from "@/components/ui/tooltip"; // No longer needed by wrapper
+// import Link from "next/link"; // No longer needed by wrapper
 import { SiGooglecalendar } from "@icons-pack/react-simple-icons";
 import { ToolkitGroups } from "@/toolkits/types";
 import { Toolkits } from "../shared";
-import { env } from "@/env";
+// import { env } from "@/env"; // No longer needed by wrapper
 // import { useMemo } from "react"; // No longer used
-import { useUser } from "@clerk/nextjs"; // Added useUser
+// import { useUser } from "@clerk/nextjs"; // No longer needed by wrapper
 
-const calendarScope = "https://www.googleapis.com/auth/calendar";
+// const calendarScope = "https://www.googleapis.com/auth/calendar"; // No longer used by wrapper
 
 export const googleCalendarClientToolkit = createClientToolkit(
   baseGoogleCalendarToolkitConfig,
@@ -37,53 +37,10 @@ export const googleCalendarClientToolkit = createClientToolkit(
     description: "Find availability and schedule meetings",
     icon: SiGooglecalendar,
     form: null,
+    // Simplified addToolkitWrapper: Assumes not private beta and no Clerk connection logic here.
+    // Allows ToolkitItem to handle button display (e.g., "Connect" for OAuth via Composio).
     addToolkitWrapper: ({ children }) => {
-      const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
-
-      // Feature access is granted, now handle Clerk vs Legacy
-      // Removed feature flag check for "Private Beta"
-      if (useClerkAccounts) {
-        const { user, isLoaded: isUserLoaded } = useUser();
-
-        if (!isUserLoaded) {
-          return ( // Clerk User loading
-            <Button variant="outline" size="sm" disabled className="bg-transparent">
-              <Loader2 className="size-4 animate-spin" />
-            </Button>
-          );
-        }
-
-        const googleAccount = user?.externalAccounts?.find(
-          (acc) => (acc.provider as string) === "oauth_google"
-        );
-
-        if (!googleAccount) {
-          // Connect Google Calendar via Clerk user profile
-          return null;
-        }
-
-        // externalAccount.approvedScopes is a space-separated string.
-        const currentScopes = googleAccount.approvedScopes ?? "";
-        const hasCalendarScopeAccess = currentScopes.split(' ').includes(calendarScope);
-
-        if (!hasCalendarScopeAccess) {
-          // Grant Google Calendar access with required scopes via Clerk user profile
-          return null;
-        }
-
-        return children; // Clerk user has Google connection with calendar scope
-      }
-      // Legacy path removed. Assuming env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED is true.
-      // If it were false, this component would not render the children if feature access was granted.
-      // This path should ideally not be reached if Clerk is the sole auth method and feature flag is true.
-      // The api.features.hasFeature check is outside the Clerk/legacy conditional, so it still applies.
-      // If useClerkAccounts is false (i.e., env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED is false),
-      // this toolkit component cannot perform its Clerk-based connection checks.
-      // Since Clerk is the sole auth provider, this state implies a misconfiguration
-      // or an unsupported environment for this toolkit. Return null to prevent rendering
-      // the toolkit UI which relies on Clerk-managed connections.
-      // The api.features.hasFeature check above still gates overall feature access.
-      return null;
+      return children;
     },
     type: ToolkitGroups.DataSource,
   },

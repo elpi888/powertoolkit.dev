@@ -131,10 +131,10 @@ const ToolkitItem = ({
 
   // Toolkits that require Composio OAuth flow
   const oauthToolkits: Toolkits[] = [
-    Toolkits.GoogleCalendar,
     Toolkits.Notion,
-    Toolkits.GoogleDrive,
-    // Add other toolkit IDs here if they use the same Composio OAuth flow
+    // Toolkits.GoogleCalendar, // Connection now handled by Clerk via addToolkitWrapper
+    // Toolkits.GoogleDrive,   // Connection now handled by Clerk via addToolkitWrapper
+    // Add other toolkit IDs here if they use the same Composio OAuth flow (e.g. GitHub if it uses Composio OAuth)
   ];
 
   const requiresComposioOAuth = oauthToolkits.includes(id);
