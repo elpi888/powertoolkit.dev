@@ -57,10 +57,13 @@ export async function POST(request: Request) {
     // Or, more generically: `${env.APP_URL}/composio/callback?service=${service}` if we want a dedicated callback handler page.
     // For now, sending them back to a generic workbench/account area with query params.
 
-    const connectionRequest = await composio.connectedAccounts.initiate({
-      userId: userId,
-      authConfigId: authConfigId,
-    });
+    const connectionRequest = await composio.connectedAccounts.initiate(
+      {
+        userId: userId,
+        authConfigId: authConfigId,
+      },
+      ourAppCallbackUrl,
+    );
 
     if (!connectionRequest.redirectUrl) {
       console.error("Composio v3 SDK did not return a redirectUrl for the provider's OAuth flow.", { service, userId });
