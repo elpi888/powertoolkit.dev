@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     // Or, more generically: `${env.APP_URL}/composio/callback?service=${service}` if we want a dedicated callback handler page.
     // For now, sending them back to a generic workbench/account area with query params.
 
-    const connectionRequest = await composio.connected_accounts.initiate({
+    const connectionRequest = await composio.connectedAccounts.initiate({
       userId: userId,
       authConfigId: authConfigId,
     });
