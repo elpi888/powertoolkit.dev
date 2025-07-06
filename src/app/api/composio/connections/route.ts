@@ -15,7 +15,7 @@ interface ComposioV3ConnectedAccount {
   data: Record<string, unknown>; // As per error (actual type has data)
   createdAt: string; // As per error (camelCase)
   updatedAt: string; // As per error (camelCase)
-  authConfig: { id: string; [key: string]: any }; // As per error (actual type has authConfig.id for auth_config_id)
+  authConfig: { id: string; [key: string]: unknown }; // Changed any to unknown for better type safety
   // user_id is not directly on items if list is filtered by user, contextually it's `userId` from auth()
   // scopes also not mentioned in the error's depiction of the actual item structure
 }
