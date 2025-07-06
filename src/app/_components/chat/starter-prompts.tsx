@@ -31,7 +31,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
       "Research competitors' AI approaches (LLM fine-tuning, RAG systems, vector databases), analyze their GitHub repositories for ML pipelines and model architectures, generate comparison charts, and store findings for future reference",
     toolkitIds: [
       Toolkits.Exa,
-      Toolkits.Github,
+      // Toolkits.Github,
       Toolkits.Image,
       Toolkits.Memory,
     ],
@@ -44,7 +44,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
       "Search for research papers on transformer architectures and attention mechanisms, find GitHub implementations of BERT/GPT variants, test model performance with Python execution, create architecture comparison visualizations, and store key insights",
     toolkitIds: [
       Toolkits.Exa,
-      Toolkits.Github,
+      // Toolkits.Github,
       Toolkits.E2B,
       Toolkits.Image,
       Toolkits.Memory,
@@ -58,7 +58,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
       "Analyze my Notion API documentation and database schemas, search for similar FastAPI/Django REST implementations on GitHub, generate API architecture diagrams, and create comprehensive technical specifications with memory of project context",
     toolkitIds: [
       Toolkits.Notion,
-      Toolkits.Github,
+      // Toolkits.Github,
       Toolkits.Image,
       Toolkits.Memory,
     ],
@@ -71,7 +71,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
     title: "Computer Vision Algorithm Implementation",
     prompt:
       "Search for research papers on object detection and image segmentation, find PyTorch/OpenCV implementations on GitHub, and benchmark performance with Python execution",
-    toolkitIds: [Toolkits.Exa, Toolkits.Github, Toolkits.E2B],
+    toolkitIds: [Toolkits.Exa, Toolkits.E2B], // Removed Toolkits.Github
     description:
       "CV research-to-implementation pipeline with performance benchmarking",
   },
@@ -79,7 +79,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
     title: "Microservices Architecture Visualization",
     prompt:
       "Analyze GitHub repositories with Docker/Kubernetes microservices architectures, execute container orchestration scripts to understand deployment flow, and generate system architecture diagrams",
-    toolkitIds: [Toolkits.Github, Toolkits.E2B, Toolkits.Image],
+    toolkitIds: [Toolkits.E2B, Toolkits.Image], // Removed Toolkits.Github
     description:
       "Microservices analysis with deployment testing and visual architecture mapping",
   },
@@ -87,7 +87,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
     title: "AI/ML Framework Knowledge Bank",
     prompt:
       "Research emerging ML frameworks (LangChain, Hugging Face Transformers, MLflow), analyze trending PyTorch/TensorFlow projects, and build a persistent knowledge base of implementation patterns",
-    toolkitIds: [Toolkits.Exa, Toolkits.Github, Toolkits.Memory],
+    toolkitIds: [Toolkits.Exa, Toolkits.Memory], // Removed Toolkits.Github
     description:
       "ML technology scouting with repository analysis and pattern retention",
   },
@@ -103,7 +103,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
     title: "JavaScript Framework Comparison Engine",
     prompt:
       "Research current JavaScript framework trends (React vs Vue vs Svelte), analyze popular GitHub repositories for each framework, and create visual technology comparison charts",
-    toolkitIds: [Toolkits.Exa, Toolkits.Github, Toolkits.Image],
+    toolkitIds: [Toolkits.Exa, Toolkits.Image], // Removed Toolkits.Github
     description:
       "Frontend framework research with repository analysis and comparative visualization",
   },
@@ -111,7 +111,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
     title: "ML Design Pattern Recognition",
     prompt:
       "Analyze GitHub repositories for machine learning design patterns (MLOps pipelines, model serving, data preprocessing), execute code examples, and remember successful patterns for future ML projects",
-    toolkitIds: [Toolkits.Github, Toolkits.E2B, Toolkits.Memory],
+    toolkitIds: [Toolkits.E2B, Toolkits.Memory], // Removed Toolkits.Github
     description:
       "ML pattern analysis with code execution and persistent learning",
   },
@@ -119,7 +119,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
     title: "Web API Project Documentation",
     prompt:
       "Search GitHub for similar REST API and GraphQL implementations, create technical documentation in Notion for authentication and data modeling, and remember key architectural decisions",
-    toolkitIds: [Toolkits.Github, Toolkits.Notion, Toolkits.Memory],
+    toolkitIds: [Toolkits.Notion, Toolkits.Memory], // Removed Toolkits.Github
     description:
       "API documentation with implementation research and decision tracking",
   },
@@ -127,7 +127,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
     title: "AI Framework & Library Research",
     prompt:
       "Research latest AI/ML libraries (Anthropic SDK, OpenAI API, vector databases like Pinecone), analyze their GitHub repositories for implementation examples, and document findings in Notion",
-    toolkitIds: [Toolkits.Exa, Toolkits.Github, Toolkits.Notion],
+    toolkitIds: [Toolkits.Exa, Toolkits.Notion], // Removed Toolkits.Github
     description:
       "AI library research with implementation analysis and structured documentation",
   },
@@ -137,7 +137,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
     title: "React Component Deep Dive",
     prompt:
       "Search for advanced React repositories (state management with Zustand/Redux, custom hooks, performance optimization), then execute and analyze component patterns to understand implementation details",
-    toolkitIds: [Toolkits.Github, Toolkits.E2B],
+    toolkitIds: [Toolkits.E2B], // Removed Toolkits.Github
     description:
       "React component discovery with hands-on code analysis and execution",
   },
@@ -153,7 +153,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
     title: "System Architecture Diagram Generator",
     prompt:
       "Analyze GitHub repositories with modern web architectures (Next.js + Prisma + tRPC, FastAPI + PostgreSQL), then generate clean architecture diagrams and data flow charts",
-    toolkitIds: [Toolkits.Github, Toolkits.Image],
+    toolkitIds: [Toolkits.Image], // Removed Toolkits.Github
     description:
       "Web architecture analysis with professional diagram generation",
   },
@@ -161,7 +161,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
     title: "Frontend Performance Intelligence",
     prompt:
       "Research web performance optimization techniques (code splitting, lazy loading, CDN strategies), then analyze high-performance GitHub repositories for implementation patterns",
-    toolkitIds: [Toolkits.Exa, Toolkits.Github],
+    toolkitIds: [Toolkits.Exa], // Removed Toolkits.Github
     description:
       "Performance research combined with real-world implementation analysis",
   },
@@ -176,7 +176,7 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
     title: "Web Development Pattern Memory",
     prompt:
       "Analyze GitHub repositories for modern web development patterns (authentication with NextAuth, API design with tRPC, database patterns with Prisma), storing insights for future projects",
-    toolkitIds: [Toolkits.Github, Toolkits.Memory],
+    toolkitIds: [Toolkits.Memory], // Removed Toolkits.Github
     description:
       "Web development pattern learning with persistent knowledge retention",
   },
@@ -232,13 +232,13 @@ const DYNAMIC_STARTER_PROMPTS: StarterPrompt[] = [
   },
 
   // Single-toolkit prompts - Core Technical Tools
-  {
-    title: "Advanced GitHub Code Analysis",
-    prompt:
-      "Perform deep analysis of React/Next.js repositories, Node.js APIs, or Python ML projects - search for specific implementations, analyze commit patterns, and discover trending projects in modern web and AI development",
-    toolkitIds: [Toolkits.Github],
-    description: "Comprehensive repository analysis for web and AI development",
-  },
+  // {
+  //   title: "Advanced GitHub Code Analysis",
+  //   prompt:
+  //     "Perform deep analysis of React/Next.js repositories, Node.js APIs, or Python ML projects - search for specific implementations, analyze commit patterns, and discover trending projects in modern web and AI development",
+  //   toolkitIds: [], // Was [Toolkits.Github]
+  //   description: "Comprehensive repository analysis for web and AI development",
+  // },
   {
     title: "Python Development Environment",
     prompt:

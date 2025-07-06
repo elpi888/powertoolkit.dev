@@ -10,7 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Plus, Info } from "lucide-react";
+import { Plus, Info, Loader2 } from "lucide-react"; // Added Loader2
 import { HStack, VStack } from "@/components/ui/stack";
 import { clientToolkits } from "@/toolkits/toolkits/client";
 import type { ClientToolkit } from "@/toolkits/types";
@@ -19,8 +19,9 @@ import { ClientToolkitConfigure } from "@/components/toolkit/toolkit-configure";
 import type { SelectedToolkit } from "./types";
 import { toolkitGroups } from "@/toolkits/toolkit-groups";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo } from "react"; // Added useMemo
+import { useEffect, useMemo, useState } from "react"; // Added useMemo, useState
 import { env } from "@/env"; // Added env
+import { toast } from "sonner"; // Added toast
 
 interface ToolkitListProps {
   selectedToolkits: SelectedToolkit[];
@@ -126,6 +127,46 @@ const ToolkitItem = ({
 }: ToolkitItemProps) => {
   const isSelected = selectedToolkits.some((t) => t.id === id);
   const needsConfiguration = Object.keys(toolkit.parameters.shape).length > 0;
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Toolkits that require Composio OAuth flow
+  const oauthToolkits: Toolkits[] = [
+    Toolkits.GoogleCalendar,
+    Toolkits.Notion,
+    Toolkits.GoogleDrive,
+    // Add other toolkit IDs here if they use the same Composio OAuth flow
+  ];
+
+  const requiresComposioOAuth = oauthToolkits.includes(id);
+
+  const handleConnectService = async (serviceId: Toolkits) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/composio/connect/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ service: serviceId.toLowerCase() }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to initiate connection for ${serviceId}`);
+      }
+
+      const { redirectUrl } = await response.json();
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+      } else {
+        throw new Error(`No redirectUrl received for ${serviceId}`);
+      }
+    } catch (error) {
+      console.error("Error initiating Composio connection:", error);
+      toast.error(error instanceof Error ? error.message : `Could not connect ${serviceId}.`);
+      setIsLoading(false);
+    }
+    // setIsLoading(false) will not be reached if redirect happens.
+    // If the redirect fails, or if there's an error before redirecting, then it's set to false.
+  };
 
   const addToolkitButtons = isSelected ? (
     <Button
@@ -136,6 +177,18 @@ const ToolkitItem = ({
     >
       Active
     </Button>
+  ) : requiresComposioOAuth ? (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => handleConnectService(id)}
+      className="bg-transparent"
+      type="button"
+      disabled={isLoading}
+    >
+      {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Plus className="mr-2 size-4" />}
+      Connect
+    </Button>
   ) : needsConfiguration ? (
     <Popover>
       <PopoverTrigger asChild>
@@ -144,6 +197,7 @@ const ToolkitItem = ({
           size="sm"
           className="bg-transparent"
           type="button"
+          disabled={isLoading} // Should not be loading if not OAuth, but for safety
         >
           Add
           <Plus className="size-4" />
@@ -154,11 +208,12 @@ const ToolkitItem = ({
           toolkit={toolkit}
           id={id}
           schema={toolkit.parameters}
-          onAdd={onAddToolkit}
+          onAdd={onAddToolkit} // This onAdd might need adjustment if config itself should trigger OAuth
         />
       </PopoverContent>
     </Popover>
   ) : (
+    // Default "Add" button for toolkits that don't need special OAuth and don't have parameters
     <Button
       variant="outline"
       size="sm"

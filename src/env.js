@@ -52,6 +52,10 @@ export const env = createEnv({
     CLERK_WEBHOOK_SECRET: z.string().startsWith("whsec_").optional(), // Optional
     COMPOSIO_API_KEY: z.string().min(1).optional(),
     COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID: z.string().min(1).optional(),
+    COMPOSIO_GITHUB_AUTH_CONFIG_ID: z.string().min(1).optional(),
+    COMPOSIO_EXA_AUTH_CONFIG_ID: z.string().min(1).optional(),
+    COMPOSIO_NOTION_AUTH_CONFIG_ID: z.string().min(1).optional(),
+    COMPOSIO_GOOGLE_DRIVE_AUTH_CONFIG_ID: z.string().min(1).optional(),
     // ...createAuthSchema(), // Removed
     ...createImageModelSchema(),
   },
@@ -85,6 +89,10 @@ export const env = createEnv({
     CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
     COMPOSIO_API_KEY: process.env.COMPOSIO_API_KEY,
     COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID: process.env.COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID,
+    COMPOSIO_GITHUB_AUTH_CONFIG_ID: process.env.COMPOSIO_GITHUB_AUTH_CONFIG_ID,
+    COMPOSIO_EXA_AUTH_CONFIG_ID: process.env.COMPOSIO_EXA_AUTH_CONFIG_ID,
+    COMPOSIO_NOTION_AUTH_CONFIG_ID: process.env.COMPOSIO_NOTION_AUTH_CONFIG_ID,
+    COMPOSIO_GOOGLE_DRIVE_AUTH_CONFIG_ID: process.env.COMPOSIO_GOOGLE_DRIVE_AUTH_CONFIG_ID,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED: process.env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED,
