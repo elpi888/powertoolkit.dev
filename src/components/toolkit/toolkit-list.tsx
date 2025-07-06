@@ -74,6 +74,7 @@ export const ToolkitList: React.FC<ToolkitListProps> = ({
       });
       window.history.replaceState({}, "", pathname);
     }
+  }, []); // Correctly closed useEffect and kept original empty dependency array
 
   return (
     <TooltipProvider>
@@ -107,7 +108,7 @@ export const ToolkitList: React.FC<ToolkitListProps> = ({
       </VStack>
     </TooltipProvider>
   );
-};
+}
 
 interface ToolkitItemProps {
   id: Toolkits;

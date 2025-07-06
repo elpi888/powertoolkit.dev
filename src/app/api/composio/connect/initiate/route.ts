@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { auth_scheme } from "@composio/core"; // Import auth_scheme
+import { AuthScheme } from "@composio/core"; // Import AuthScheme
 import { env } from "@/env";
 import { getComposioClient } from "@/lib/composio";
 
@@ -57,10 +57,11 @@ export async function POST(request: Request) {
     // Or, more generically: `${env.APP_URL}/composio/callback?service=${service}` if we want a dedicated callback handler page.
     // For now, sending them back to a generic workbench/account area with query params.
 
-    const connectionRequest = await composio.connected_accounts.initiate({
-      userId: userId,
-      authConfigId: authConfigId,
-    });
+    const connectionRequest = await composio.connectedAccounts.initiate(
+      userId,
+      authConfigId,
+      // ourAppCallbackUrl, // Temporarily removing based on VercelProvider context
+    );
 
     if (!connectionRequest.redirectUrl) {
       console.error("Composio v3 SDK did not return a redirectUrl for the provider's OAuth flow.", { service, userId });

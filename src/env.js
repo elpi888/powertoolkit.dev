@@ -50,7 +50,7 @@ export const env = createEnv({
     // Add Clerk server-side keys
     CLERK_SECRET_KEY: z.string().startsWith("sk_"),
     CLERK_WEBHOOK_SECRET: z.string().startsWith("whsec_").optional(), // Optional
-    COMPOSIO_API_KEY: z.string().min(1).optional(),
+    COMPOSIO_API_KEY: z.string().min(1), // Made non-optional
     COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID: z.string().min(1).optional(),
     COMPOSIO_GITHUB_AUTH_CONFIG_ID: z.string().min(1).optional(),
     COMPOSIO_EXA_AUTH_CONFIG_ID: z.string().min(1).optional(),
@@ -58,8 +58,8 @@ export const env = createEnv({
     COMPOSIO_GOOGLE_DRIVE_AUTH_CONFIG_ID: z.string().min(1).optional(),
     // ...createAuthSchema(), // Removed
     ...createImageModelSchema(),
-    COMPOSIO_API_KEY: z.string().min(1),
-    COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID: z.string().min(1),
+    // COMPOSIO_API_KEY: z.string().min(1), // Removed duplicate
+    // COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID: z.string().min(1), // Removed duplicate
   },
 
   /**
@@ -100,8 +100,8 @@ export const env = createEnv({
     NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED: process.env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED,
     // ...authRuntimeEnv(), // Removed
     ...imageModelRuntimeEnv(),
-    COMPOSIO_API_KEY: process.env.COMPOSIO_API_KEY,
-    COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID: process.env.COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID,
+    // COMPOSIO_API_KEY: process.env.COMPOSIO_API_KEY, // Removed duplicate
+    // COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID: process.env.COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID, // Removed duplicate
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
