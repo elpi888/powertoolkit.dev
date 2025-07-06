@@ -23,6 +23,7 @@ export const githubClientToolkit = createClientToolkit(
     description: "Find and analyze repositories, users, and organizations",
     icon: SiGithub,
     form: null,
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     addToolkitWrapper: ({ children }) => {
       const useClerkAccounts = env.NEXT_PUBLIC_FEATURE_EXTERNAL_ACCOUNTS_ENABLED;
       // eslint-disable-next-line react-hooks/rules-of-hooks

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { auth_scheme } from "@composio/core"; // Import auth_scheme
-
 import { env } from "@/env";
 import { getComposioClient } from "@/lib/composio";
 
@@ -61,9 +60,6 @@ export async function POST(request: Request) {
     const connectionRequest = await composio.connected_accounts.initiate({
       userId: userId,
       authConfigId: authConfigId,
-      config: auth_scheme.oauth2({
-        redirectUrl: ourAppCallbackUrl, // Our app's final destination for the user
-      }),
     });
 
     if (!connectionRequest.redirectUrl) {
