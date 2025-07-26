@@ -66,29 +66,19 @@ async function handler(req: Request) {
   try {
     switch (eventType) {
       case "user.created":
-        await db.user.create({
-          data: {
-            id: eventData.id, // This is Clerk's internal user ID
-            email: eventData.email_addresses.find(
-              (email) => email.id === eventData.primary_email_address_id,
-            )?.email_address ?? null, // Defensive null check
-            name: eventData.first_name
-              ? `${eventData.first_name} ${eventData.last_name ?? ""}`.trim()
-              : eventData.username, // Fallback to username if name parts are not available
-            image: eventData.image_url,
-            emailVerified: getEmailVerifiedDate(eventData),
-            // Note: external_id is not directly available on eventData.data for user.created
-            // If mapping by external_id was critical at creation via webhook,
-            // this would need a more complex flow or reliance on JWT customisation for subsequent linking.
-            // However, our tRPC provisioning uses ctx.auth.userId which *is* externalId if set.
-          },
-        });
-        console.log(`User ${eventData.id} created in local DB.`);
+        // The `protectedProcedure` in tRPC is now responsible for user provisioning.
+        // This webhook handler for `user.created` is redundant and can be safely ignored
+        // to prevent race conditions.
+        console.log(`Webhook: Ignoring 'user.created' event for user ${eventData.id} as tRPC handles it.`);
         break;
 
       case "user.updated":
+        // The `protectedProcedure` in tRPC is now responsible for user provisioning.
+        // This webhook handler for `user.created` is redundant and can be safely ignored
+        // to prevent race conditions.
+        console.log(`Webhook: Ignoring 'user.created' event for user ${eventData.id} as tRPC handles it.`);
         await db.user.update({
-          where: { id: eventData.id }, // Assumes local DB user.id stores Clerk's user.id
+          where: { id: eventData.id },
           data: {
             email: eventData.email_addresses.find(
               (email) => email.id === eventData.primary_email_address_id,

@@ -153,43 +153,26 @@ export const protectedProcedure = t.procedure
       // This is preferable to deriving from email.
       // A better UX would be to prompt the user to complete their profile on first login.
 
-      try {
-        userInDb = await ctx.db.user.create({
-          data: {
-            id: ctx.auth.userId, // Use ctx.auth.userId (which is externalId or Clerk's ID via JWT template)
-            email: clerkUser.primaryEmailAddress?.emailAddress,
-            name: nameToStore,
-            image: clerkUser.imageUrl,
-            emailVerified: clerkUser.primaryEmailAddress?.verification?.status === "verified"
+      // Use Prisma's upsert to safely create the user or do nothing if they already exist.
+      // This is more robust than a findFirst/create pattern in concurrent environments (like Vercel serverless functions).
+      // It prevents race conditions where two requests might try to create the same user simultaneously.
+      userInDb = await ctx.db.user.upsert({
+        where: { id: ctx.auth.userId },
+        create: {
+          id: ctx.auth.userId,
+          email: clerkUser.primaryEmailAddress?.emailAddress,
+          name: nameToStore,
+          image: clerkUser.imageUrl,
+          emailVerified:
+            clerkUser.primaryEmailAddress?.verification?.status === "verified"
               ? new Date()
               : null,
-            // Note: This sets emailVerified based on Clerk's status at creation time.
-            // Webhooks (user.updated) should keep this in sync if status changes later.
-          },
-        });
-      } catch (error: any) {
-        // Improved error handling as suggested by Coderabbit
-        console.error("Failed to create user in local DB:", error);
-        // Check if it's a unique constraint violation (user might have been created by a concurrent request)
-        if (error.code === 'P2002' || (error.meta?.target as string[])?.includes('email')) { // P2002 is Prisma's unique constraint failed code
-          // Attempt to fetch the user again, as they might have been created by a concurrent request
-          userInDb = await ctx.db.user.findUnique({
-            where: { id: ctx.auth.userId },
-          });
-          if (!userInDb) {
-            // If still not found after a P2002, something else is wrong.
-             throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to provision user locally after unique constraint error." });
-          }
-          // If found, proceed with this userInDb
-        } else {
-          // For other errors, re-throw a generic error
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to provision user locally.",
-            cause: error
-          });
-        }
-      }
+        },
+        // The update object is run when a user is found.
+        // We don't need to update anything on the user object during this initial provisioning.
+        // The webhook (`user.updated`) is responsible for keeping the user data in sync.
+        update: {},
+      });
     }
 
     // Attach the Clerk auth object and potentially the local DB user to the context for procedures
